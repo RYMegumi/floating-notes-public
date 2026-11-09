@@ -1,0 +1,16 @@
+node_modules/
+out/
+dist/
+dist-release/
+.cache/
+*.log
+.DS_Store
+test-results/
+tests/.tmp/
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+*.mobileprovision

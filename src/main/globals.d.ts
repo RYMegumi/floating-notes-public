@@ -1,0 +1,2 @@
+declare const __FUJIAN_SUPABASE_URL__: string
+declare const __FUJIAN_SUPABASE_PUBLISHABLE_KEY__: string
