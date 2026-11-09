@@ -8,22 +8,23 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="noise" aria-hidden="true"></div>
-    <header class="header">
-      <a class="brand" href="/" aria-label="浮笺首页">
-        <img src="assets/icon.png" alt="" width="32" height="32" />
-        <span>浮笺</span>
-      </a>
-      <nav class="nav" aria-label="主导航">
-        <a href="/">首页</a>
-        <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">GitHub</a>
-      </nav>
+    <header class="nav-bar">
+      <div class="nav-inner">
+        <a class="brand" href="/" aria-label="浮笺首页">
+          <img src="assets/icon.png" alt="" width="24" height="24" />
+          <span>浮笺</span>
+        </a>
+        <nav class="nav-links" aria-label="主导航">
+          <a href="/">首页</a>
+          <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
     </header>
 
     <main class="legal">
-      <p class="eyebrow"><span class="dot"></span> 隐私</p>
-      <h1>你的数据，<br />尽量留在你手里。</h1>
-      <p class="legal-lede">这份说明描述浮笺当前版本如何处理数据。它很短，因为产品本身也很短。</p>
+      <p class="eyebrow">隐私</p>
+      <h1>隐私说明</h1>
+      <p class="legal-lede">这份说明描述浮笺当前版本如何处理数据。</p>
 
       <h2>保存在本机</h2>
       <p>
@@ -34,9 +35,7 @@
       <p>
         登录需要邮箱验证码。登录后，任务和随记会同步到浮笺使用的 Supabase 数据库，以便同一账号在不同设备上看到同一份内容。数据按账号隔离，不会公开展示。
       </p>
-      <p>
-        云端数据目前不是端到端加密。请不要把密码、密钥或其他高度敏感信息放进任务或随记。
-      </p>
+      <p>云端数据目前不是端到端加密。请不要把密码、密钥或其他高度敏感信息放进任务或随记。</p>
 
       <h2>AI 关键词</h2>
       <p>
@@ -44,9 +43,7 @@
       </p>
 
       <h2>邮件</h2>
-      <p>
-        邮箱只用于发送登录验证码。验证码通过 Resend 和浮笺的邮件域名发送，不会用于营销邮件。
-      </p>
+      <p>邮箱只用于发送登录验证码。验证码通过 Resend 和浮笺的邮件域名发送，不会用于营销邮件。</p>
 
       <h2>联系</h2>
       <p>
@@ -59,10 +56,12 @@
     </main>
 
     <footer class="footer">
-      <p>浮笺 · 一个安静的桌面任务便签</p>
-      <div class="footer-links">
-        <a href="/">首页</a>
-        <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">源代码</a>
+      <div class="footer-inner">
+        <p>浮笺 · 桌面待办便签</p>
+        <div class="footer-links">
+          <a href="/">首页</a>
+          <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">源代码</a>
+        </div>
       </div>
     </footer>
   </body>

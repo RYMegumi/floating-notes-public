@@ -3,143 +3,123 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>浮笺 — 把今天要做的事，轻轻放在桌面上</title>
+    <title>浮笺 — 桌面待办便签</title>
     <meta
       name="description"
-      content="浮笺是一款安静的 Windows 桌面待办便签。只显示标题，支持随记、关键词和多设备同步。"
+      content="浮笺是一个无边框的桌面任务便签。只显示标题，点击展开备注；也可以记录随记。支持 Windows 与 macOS。"
     />
     <meta property="og:title" content="浮笺 — 桌面待办便签" />
-    <meta
-      property="og:description"
-      content="把今天要做的事，轻轻放在桌面上。Windows 便携版，无需安装。"
-    />
+    <meta property="og:description" content="只显示标题的桌面任务便签，支持随记与多设备同步。" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="assets/app-preview.png" />
+    <meta property="og:image" content="assets/tasks-light.webp" />
     <link rel="icon" href="assets/icon.png" />
     <link rel="stylesheet" href="styles.css" />
+    <script src="download.js" defer></script>
   </head>
   <body>
-    <div class="noise" aria-hidden="true"></div>
-    <header class="header">
-      <a class="brand" href="/" aria-label="浮笺首页">
-        <img src="assets/icon.png" alt="" width="32" height="32" />
-        <span>浮笺</span>
-      </a>
-      <nav class="nav" aria-label="主导航">
-        <a href="#features">功能</a>
-        <a href="#download">下载</a>
-        <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">GitHub</a>
-      </nav>
+    <header class="nav-bar">
+      <div class="nav-inner">
+        <a class="brand" href="/" aria-label="浮笺首页">
+          <img src="assets/icon.png" alt="" width="24" height="24" />
+          <span>浮笺</span>
+        </a>
+        <nav class="nav-links" aria-label="主导航">
+          <a href="#product">产品</a>
+          <a href="#download">下载</a>
+          <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
     </header>
 
     <main>
       <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="dot"></span> Windows 桌面便签 · 1.3.0</p>
-          <h1>把今天要做的事，<br /><span>轻轻放在桌面上。</span></h1>
-          <p class="lede">
-            它不抢你的注意力。打开就是一张安静的便签，只显示标题，点开才看备注。
-          </p>
-          <div class="actions">
-            <a
-              class="button button-primary"
-              href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
-              rel="noreferrer"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" />
-              </svg>
-              下载 Windows 版
-            </a>
-            <a
-              class="button button-quiet"
-              href="https://github.com/RYMegumi/floating-notes-public"
-              rel="noreferrer"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.68c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0 1 12 6.8a9.6 9.6 0 0 1 2.5.34c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"
-                />
-              </svg>
-              GitHub 开源
-            </a>
-          </div>
-          <p class="meta">Windows 10 / 11 · 便携版 · 无需安装</p>
+        <p class="eyebrow">浮笺</p>
+        <h1>桌面待办便签</h1>
+        <p class="hero-copy">
+          只显示标题，点击展开备注。也可以在同一处记录随记。
+        </p>
+        <div class="hero-actions">
+          <a
+            class="button button-primary"
+            data-download
+            href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
+            rel="noreferrer"
+          >
+            下载 Windows 版
+          </a>
+          <a class="button button-quiet" href="#product">了解功能</a>
         </div>
-
-        <div class="hero-visual">
-          <div class="visual-glow" aria-hidden="true"></div>
-          <figure class="preview">
-            <img
-              src="assets/app-preview.png"
-              alt="浮笺的桌面任务列表，显示待办与随记切换"
-              width="612"
-              height="459"
-            />
-          </figure>
-          <p class="visual-caption">安静地待在桌面角落，需要时再展开。</p>
-        </div>
+        <p class="hero-meta">Windows 10 / 11 · macOS · 无需安装</p>
       </section>
 
-      <section class="features" id="features" aria-labelledby="features-title">
-        <div class="section-heading">
-          <p class="eyebrow"><span class="dot"></span> 少一点打扰</p>
-          <h2 id="features-title">需要的都在，<br />不需要的都不在。</h2>
-        </div>
-        <div class="feature-grid">
-          <article class="feature">
-            <span class="feature-index">01</span>
-            <h3>只显示标题</h3>
-            <p>列表保持干净。点击标题，才展开备注；专注模式只留下当前这件事。</p>
-          </article>
-          <article class="feature">
-            <span class="feature-index">02</span>
-            <h3>随记与关键词</h3>
-            <p>待办之外，也放得下临时念头。关键词可以手动整理，也可以交给 AI。</p>
-          </article>
-          <article class="feature">
-            <span class="feature-index">03</span>
-            <h3>多设备同步</h3>
-            <p>邮箱验证码登录。同一账号在 Windows 和 macOS 上，看到同一份任务与随记。</p>
-          </article>
-        </div>
+      <section class="products" id="product" aria-label="产品功能">
+        <article class="product-card">
+          <div class="product-media">
+            <img
+              src="assets/tasks-light.webp"
+              alt="浮笺待办列表，浅色玻璃效果"
+              width="928"
+              height="732"
+            />
+          </div>
+          <div class="product-copy">
+            <h2>待办</h2>
+            <p>按重要和紧急排序，支持归档、恢复和专注模式。</p>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-media product-media--notes">
+            <img
+              src="assets/notes-light.webp"
+              alt="浮笺随记列表，浅色玻璃效果"
+              width="928"
+              height="1374"
+            />
+          </div>
+          <div class="product-copy">
+            <h2>随记</h2>
+            <p>记录临时想法，编辑关键词，登录后与任务一起同步。</p>
+          </div>
+        </article>
       </section>
 
       <section class="download" id="download" aria-labelledby="download-title">
         <div>
-          <p class="eyebrow"><span class="dot"></span> 现在就能用</p>
           <h2 id="download-title">下载浮笺</h2>
-          <p class="download-copy">
-            单文件便携版。下载后双击运行，不需要安装，也不会在后台注册服务。
-          </p>
+          <p>选择适合当前系统的版本。</p>
         </div>
-        <div class="download-card">
-          <div class="download-meta">
-            <span class="platform">Windows 10 / 11 · x64</span>
-            <span class="version">v1.3.0</span>
-          </div>
+        <div class="download-actions">
           <a
-            class="button button-primary button-wide"
+            class="button button-primary"
+            data-download
             href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
             rel="noreferrer"
           >
-            前往 GitHub 下载
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 17 17 7M8 7h9v9" />
-            </svg>
+            下载 Windows 版
           </a>
-          <p class="download-note">
-            首次运行 Windows 可能提示 SmartScreen。应用暂未签名，点「更多信息 → 仍要运行」即可。
+          <a
+            class="download-all"
+            href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
+            rel="noreferrer"
+          >
+            查看全部版本
+          </a>
+          <p class="download-meta">
+            <span data-platform-label>Windows 10 / 11</span>
+            <span data-release-version>1.3.0</span>
           </p>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <p>浮笺 · 一个安静的桌面任务便签</p>
-      <div class="footer-links">
-        <a href="privacy.html">隐私</a>
-        <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">源代码</a>
+      <div class="footer-inner">
+        <p>浮笺 · 桌面待办便签</p>
+        <div class="footer-links">
+          <a href="privacy.html">隐私</a>
+          <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">源代码</a>
+        </div>
       </div>
     </footer>
   </body>
