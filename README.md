@@ -3,9 +3,7 @@
 一个无边框的桌面待办便签，支持 Windows 和 macOS。  
 A frameless desktop to-do note for Windows and macOS.
 
-[中文](#chinese) · [English](#english) · [官网](https://fujian.fyi) · [下载](https://github.com/RYMegumi/floating-notes-public/releases/latest)
-
-<a name="chinese"></a>
+[中文](#中文) · [English](#english) · [官网](https://fujian.fyi) · [下载](https://github.com/RYMegumi/floating-notes-public/releases/latest)
 
 ## 中文
 
@@ -87,8 +85,6 @@ docs          平台、安全与预览文档
 - [跨平台开发](docs/CROSS_PLATFORM.md)
 - [macOS](docs/MACOS.md)
 - [安全边界](docs/SECURITY.md)
-
-<a name="english"></a>
 
 ## English
 
