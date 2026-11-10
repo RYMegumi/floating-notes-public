@@ -81,6 +81,21 @@ let lastThemeKey = ''
 const hiddenTestMode = process.env.FUJIAN_TEST_HIDDEN === '1'
 const forcedLanguage = process.env.FUJIAN_LANGUAGE?.trim()
 
+/** Resolve the OS language, not the app bundle locale. Packaged Electron apps
+ * without localized resources report `getLocale() === "en-US"` on a Chinese
+ * Mac; `getSystemLocale()` is the value that follows the Mac itself. */
+function systemLocale(): string {
+  try {
+    return (
+      app.getSystemLocale?.() ||
+      app.getPreferredSystemLanguages?.()[0] ||
+      app.getLocale()
+    )
+  } catch {
+    return app.getLocale()
+  }
+}
+
 app.setName('浮笺')
 app.setAppUserModelId('com.fujian.widget')
 
@@ -123,7 +138,7 @@ async function startApp(): Promise<void> {
   settings = loaded.settings
   language = isLanguage(forcedLanguage)
     ? forcedLanguage
-    : resolveLanguage(settings.language, app.getLocale())
+    : resolveLanguage(settings.language, systemLocale())
   loadWarnings = store.loadWarnings.map(translateWarning)
   llmService = new LlmService(dataDir, () => language)
   nativeTheme.themeSource = settings.theme
@@ -861,7 +876,7 @@ function updateSettings(patch: Record<string, unknown>, source: SettingsChangedP
   if (previous.language !== settings.language) {
     language = isLanguage(forcedLanguage)
       ? forcedLanguage
-      : resolveLanguage(settings.language, app.getLocale())
+      : resolveLanguage(settings.language, systemLocale())
   }
 
   if (previous.theme !== settings.theme) {

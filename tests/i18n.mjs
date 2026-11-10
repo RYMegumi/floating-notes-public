@@ -139,6 +139,25 @@ try {
   await page.getByRole('tab', { name: 'Notes', exact: true }).click()
   await page.waitForTimeout(300)
   check((await page.getByRole('button', { name: 'Add note', exact: true }).count()) === 1, 'English add note button')
+
+  await page.getByRole('button', { name: 'Settings & archive', exact: true }).click()
+  await page.locator('.settings-view').waitFor({ state: 'visible' })
+  const systemLanguageSection = page
+    .locator('.settings-section')
+    .filter({ has: page.getByRole('heading', { name: 'Language', exact: true }) })
+  await systemLanguageSection.getByRole('button', { name: 'System', exact: true }).click()
+  await page.waitForTimeout(600)
+  const systemLocale = await app.evaluate(
+    ({ app }) => app.getSystemLocale?.() ?? app.getLocale()
+  )
+  const expectedLanguage = String(systemLocale).toLowerCase().startsWith('zh')
+    ? 'zh-CN'
+    : 'en'
+  const expectedHeading = expectedLanguage === 'zh-CN' ? '设置' : 'Settings'
+  check(
+    (await page.getByRole('heading', { name: expectedHeading, exact: true }).count()) === 1,
+    `System language follows the OS locale (${systemLocale})`
+  )
   check(pageErrors.length === 0, 'English UI has no renderer errors')
 } catch (error) {
   failed += 1
