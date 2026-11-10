@@ -14,7 +14,8 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "build": "npm run typecheck && electron-vite build",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win portable",
+    "build:win": "npm run build && electron-builder --win nsis",
+    "build:win:portable": "npm run build && electron-builder --win portable",
     "build:mac": "npm run build && electron-builder --mac",
     "build:mac:dir": "npm run build && electron-builder --mac --dir",
     "build:mac:arm64": "npm run build && electron-builder --mac --dir --arm64",
@@ -89,16 +90,22 @@
       "icon": "build/icon.ico",
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
         }
       ],
-      "artifactName": "浮笺-${version}-便携版.${ext}"
+      "artifactName": "浮笺-${version}-win-${arch}.${ext}"
     },
-    "portable": {
-      "requestExecutionLevel": "user"
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "浮笺",
+      "artifactName": "浮笺-${version}-win-${arch}.${ext}"
     },
     "mac": {
       "icon": "build/icon.png",

@@ -22,7 +22,7 @@
 
 前往 [Releases](https://github.com/RYMegumi/floating-notes-public/releases/latest)：
 
-- **Windows 10 / 11**：便携版 `.exe`，无需安装。
+- **Windows 10 / 11**：安装版 `.exe`，按提示完成安装。
 - **macOS**：`.dmg`，当前为 Apple Silicon 版本。
 
 Windows 首次运行可能出现 SmartScreen 提示，这是未签名应用的正常提示。
