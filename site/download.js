@@ -13,12 +13,23 @@
   const platformLabels = [...document.querySelectorAll('[data-platform-label]')]
   const versionLabels = [...document.querySelectorAll('[data-release-version]')]
 
-  buttons.forEach((button) => {
-    button.textContent = `下载 ${platform} 版`
-  })
-  platformLabels.forEach((label) => {
-    label.textContent = isMac ? 'macOS' : 'Windows 10 / 11'
-  })
+  function language() {
+    return document.documentElement.dataset.lang === 'en' ? 'en' : 'zh'
+  }
+
+  function updateLabels() {
+    const lang = language()
+    buttons.forEach((button) => {
+      button.textContent =
+        lang === 'en' ? `Download for ${platform}` : `下载 ${platform} 版`
+    })
+    platformLabels.forEach((label) => {
+      label.textContent = isMac ? 'macOS' : 'Windows 10 / 11'
+    })
+  }
+
+  updateLabels()
+  window.addEventListener('fujian:languagechange', updateLabels)
 
   fetch(apiUrl, {
     headers: { Accept: 'application/vnd.github+json' },
@@ -30,7 +41,9 @@
     })
     .then((release) => {
       versionLabels.forEach((label) => {
-        if (typeof release.tag_name === 'string') label.textContent = release.tag_name
+        if (typeof release.tag_name === 'string') {
+          label.textContent = release.tag_name.replace(/^v/, '')
+        }
       })
 
       const asset = Array.isArray(release.assets)

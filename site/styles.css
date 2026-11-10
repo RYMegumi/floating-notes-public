@@ -439,3 +439,66 @@ h1 {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Language switch */
+
+.lang-en {
+  display: none;
+}
+
+html[data-lang="en"] .lang-zh {
+  display: none !important;
+}
+
+html[data-lang="en"] .lang-en {
+  display: inline;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--canvas);
+}
+
+.lang-switch button {
+  min-width: 27px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.lang-switch button:hover {
+  color: var(--text);
+}
+
+.lang-switch button[aria-pressed="true"] {
+  color: var(--text);
+  background: var(--bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 540px) {
+  .nav-links {
+    gap: 12px;
+  }
+
+  .lang-switch button {
+    min-width: 24px;
+    padding: 3px 5px;
+  }
+}

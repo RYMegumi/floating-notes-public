@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-page="home">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,29 +13,45 @@
     <meta property="og:type" content="website" />
     <meta property="og:image" content="assets/tasks-light.png" />
     <link rel="icon" href="assets/icon.png" />
+    <script src="lang.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <script src="download.js" defer></script>
   </head>
   <body>
     <header class="nav-bar">
       <div class="nav-inner">
-        <a class="brand" href="/" aria-label="浮笺首页">
+        <a class="brand" href="/" data-aria-zh="浮笺首页" data-aria-en="Fujian home">
           <img src="assets/icon.png" alt="" width="24" height="24" />
-          <span>浮笺</span>
+          <span class="lang-zh">浮笺</span>
+          <span class="lang-en">Fujian</span>
         </a>
-        <nav class="nav-links" aria-label="主导航">
-          <a href="#product">产品</a>
+        <nav class="nav-links" data-aria-zh="主导航" data-aria-en="Main navigation">
+          <a href="#product">
+            <span class="lang-zh">产品</span>
+            <span class="lang-en">Product</span>
+          </a>
           <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">GitHub</a>
-          <a href="#download">下载</a>
+          <a href="#download">
+            <span class="lang-zh">下载</span>
+            <span class="lang-en">Download</span>
+          </a>
+          <span class="lang-switch" role="group" aria-label="语言 / Language">
+            <button type="button" data-lang-button="zh" aria-pressed="true">中文</button>
+            <button type="button" data-lang-button="en" aria-pressed="false">EN</button>
+          </span>
         </nav>
       </div>
     </header>
 
     <main>
       <section class="hero">
-        <h1>桌面待办便签</h1>
+        <h1>
+          <span class="lang-zh">桌面待办便签</span>
+          <span class="lang-en">Desktop to-do notes</span>
+        </h1>
         <p class="hero-copy">
-          只显示标题，点击展开备注。也可以在同一处记录随记。
+          <span class="lang-zh">只显示标题，点击展开备注。也可以在同一处记录随记。</span>
+          <span class="lang-en">Titles only. Click to open details. Keep quick notes in the same place.</span>
         </p>
         <div class="hero-actions">
           <a
@@ -44,26 +60,52 @@
             href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
             rel="noreferrer"
           >
-            下载 Windows 版
+            <span class="lang-zh">下载 Windows 版</span>
+            <span class="lang-en">Download for Windows</span>
           </a>
-          <a class="button button-quiet" href="#product">了解功能</a>
+          <a class="button button-quiet" href="#product">
+            <span class="lang-zh">了解功能</span>
+            <span class="lang-en">See features</span>
+          </a>
         </div>
-        <p class="hero-meta">Windows 10 / 11 · macOS · 无需安装</p>
+        <p class="hero-meta">
+          <span class="lang-zh">Windows 10 / 11 · macOS · 安装版</span>
+          <span class="lang-en">Windows 10 / 11 · macOS · Installer</span>
+        </p>
       </section>
 
-      <section class="products" id="product" aria-label="产品功能">
+      <section
+        class="products"
+        id="product"
+        data-aria-zh="产品功能"
+        data-aria-en="Product features"
+      >
         <article class="product-card">
           <div class="product-media">
             <img
               src="assets/tasks-light.png"
+              data-src-zh="assets/tasks-light.png"
+              data-src-en="assets/tasks-light-en.png"
               alt="浮笺待办列表，浅色玻璃效果"
+              data-alt-zh="浮笺待办列表，浅色玻璃效果"
+              data-alt-en="Fujian task list in the light theme"
+              data-width-zh="1224"
+              data-width-en="1224"
+              data-height-zh="1398"
+              data-height-en="1398"
               width="1224"
               height="1398"
             />
           </div>
           <div class="product-copy">
-            <h2>待办</h2>
-            <p>按重要和紧急排序，支持归档、恢复和专注模式。</p>
+            <h2>
+              <span class="lang-zh">待办</span>
+              <span class="lang-en">Tasks</span>
+            </h2>
+            <p>
+              <span class="lang-zh">按重要和紧急排序，支持归档、恢复和专注模式。</span>
+              <span class="lang-en">Sort by priority, with archive, restore, and a calm focus mode.</span>
+            </p>
           </div>
         </article>
 
@@ -71,22 +113,42 @@
           <div class="product-media product-media--notes">
             <img
               src="assets/notes-light.png"
+              data-src-zh="assets/notes-light.png"
+              data-src-en="assets/notes-light-en.png"
               alt="浮笺随记列表，浅色玻璃效果"
+              data-alt-zh="浮笺随记列表，浅色玻璃效果"
+              data-alt-en="Fujian notes list in the light theme"
+              data-width-zh="1224"
+              data-width-en="1224"
+              data-height-zh="1434"
+              data-height-en="1434"
               width="1224"
               height="1434"
             />
           </div>
           <div class="product-copy">
-            <h2>随记</h2>
-            <p>记录临时想法，编辑关键词，登录后与任务一起同步。</p>
+            <h2>
+              <span class="lang-zh">随记</span>
+              <span class="lang-en">Notes</span>
+            </h2>
+            <p>
+              <span class="lang-zh">记录临时想法，编辑关键词，登录后与任务一起同步。</span>
+              <span class="lang-en">Capture quick thoughts, edit keywords, and sync with tasks after signing in.</span>
+            </p>
           </div>
         </article>
       </section>
 
       <section class="download" id="download" aria-labelledby="download-title">
         <div>
-          <h2 id="download-title">下载浮笺</h2>
-          <p>选择适合当前系统的版本。</p>
+          <h2 id="download-title">
+            <span class="lang-zh">下载浮笺</span>
+            <span class="lang-en">Download Fujian</span>
+          </h2>
+          <p>
+            <span class="lang-zh">选择适合当前系统的版本。</span>
+            <span class="lang-en">Choose the version for your system.</span>
+          </p>
         </div>
         <div class="download-actions">
           <a
@@ -95,18 +157,20 @@
             href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
             rel="noreferrer"
           >
-            下载 Windows 版
+            <span class="lang-zh">下载 Windows 版</span>
+            <span class="lang-en">Download for Windows</span>
           </a>
           <a
             class="download-all"
             href="https://github.com/RYMegumi/floating-notes-public/releases/latest"
             rel="noreferrer"
           >
-            查看全部版本
+            <span class="lang-zh">查看全部版本</span>
+            <span class="lang-en">All releases</span>
           </a>
           <p class="download-meta">
             <span data-platform-label>Windows 10 / 11</span>
-            <span data-release-version>1.3.0</span>
+            <span data-release-version>1.4.0</span>
           </p>
         </div>
       </section>
@@ -114,10 +178,19 @@
 
     <footer class="footer">
       <div class="footer-inner">
-        <p>浮笺 · 桌面待办便签</p>
+        <p>
+          <span class="lang-zh">浮笺 · 桌面待办便签</span>
+          <span class="lang-en">Fujian · Desktop to-do notes</span>
+        </p>
         <div class="footer-links">
-          <a href="privacy.html">隐私</a>
-          <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">源代码</a>
+          <a href="privacy.html">
+            <span class="lang-zh">隐私</span>
+            <span class="lang-en">Privacy</span>
+          </a>
+          <a href="https://github.com/RYMegumi/floating-notes-public" rel="noreferrer">
+            <span class="lang-zh">源代码</span>
+            <span class="lang-en">Source</span>
+          </a>
         </div>
       </div>
     </footer>
