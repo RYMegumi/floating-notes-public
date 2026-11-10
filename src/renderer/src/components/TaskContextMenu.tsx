@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Archive, Pencil, Target, XCircle } from 'lucide-react'
 import type { Task } from '@shared/types'
+import { useI18n } from '../i18n'
 
 interface TaskContextMenuProps {
   task: Task
@@ -26,6 +27,7 @@ export function TaskContextMenu({
   onArchive,
   onClose
 }: TaskContextMenuProps) {
+  const { t } = useI18n()
   const menuRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
 
@@ -84,7 +86,7 @@ export function TaskContextMenu({
       ref={menuRef}
       className="context-menu"
       role="menu"
-      aria-label={`${task.title} 的操作`}
+      aria-label={t('{title} 的操作', { title: task.title })}
       style={{
         left: position?.left ?? x,
         top: position?.top ?? y,
@@ -102,7 +104,7 @@ export function TaskContextMenu({
         }}
       >
         {focused ? <XCircle size={14.5} /> : <Target size={14.5} />}
-        {focused ? '退出专注' : '进入专注模式'}
+        {focused ? t('退出专注') : t('进入专注模式')}
       </button>
       {!focused && (
         <button
@@ -115,7 +117,7 @@ export function TaskContextMenu({
           }}
         >
           <Pencil size={14.5} />
-          编辑任务
+          {t('编辑任务')}
         </button>
       )}
       <div className="context-menu__separator" role="separator" />
@@ -129,7 +131,7 @@ export function TaskContextMenu({
         }}
       >
         <Archive size={14.5} />
-        归档（完成）
+        {t('归档（完成）')}
       </button>
     </div>,
     document.body

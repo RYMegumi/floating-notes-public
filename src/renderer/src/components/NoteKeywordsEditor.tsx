@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '../i18n'
 
 interface NoteKeywordsEditorProps {
   keywords: string[]
@@ -7,6 +8,7 @@ interface NoteKeywordsEditorProps {
 }
 
 export function NoteKeywordsEditor({ keywords, onSave, onCancel }: NoteKeywordsEditorProps) {
+  const { t } = useI18n()
   const [value, setValue] = useState(keywords.join('、'))
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -47,16 +49,16 @@ export function NoteKeywordsEditor({ keywords, onSave, onCancel }: NoteKeywordsE
         className="note-keywords-editor__input"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="用顿号或逗号分隔关键词"
-        aria-label="编辑关键词"
+        placeholder={t('用顿号或逗号分隔关键词')}
+        aria-label={t('编辑关键词')}
         maxLength={160}
         autoComplete="off"
       />
       <button type="submit" className="note-keywords-editor__save">
-        保存
+        {t('保存')}
       </button>
       <button type="button" className="note-keywords-editor__cancel" onClick={onCancel}>
-        取消
+        {t('取消')}
       </button>
     </form>
   )

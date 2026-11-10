@@ -13,6 +13,7 @@ import {
 import type { MouseEvent } from 'react'
 import type { Note } from '@shared/types'
 import { PRIORITY_LABELS, priorityTier } from '@shared/sort'
+import { useI18n } from '../i18n'
 import { formatTaskTime } from '../utils/date'
 import { NoteInlineEditor, type NoteEditDraft } from './NoteInlineEditor'
 import { NoteKeywordsEditor } from './NoteKeywordsEditor'
@@ -60,7 +61,9 @@ export function NoteItem({
   onDelete,
   onContextMenu
 }: NoteItemProps) {
+  const { language, t } = useI18n()
   const tier = priorityTier(note)
+  const priority = t(PRIORITY_LABELS[tier])
   const keywordText = note.keywords.join(' · ')
 
   function handleContentDoubleClick(event: MouseEvent<HTMLParagraphElement>): void {
@@ -116,7 +119,15 @@ export function NoteItem({
         className="task__summary"
         onClick={onToggle}
         aria-expanded={expanded}
-        aria-label={`${note.title}，${PRIORITY_LABELS[tier]}${keywordText ? `，关键词：${keywordText}` : ''}`}
+        aria-label={
+          keywordText
+            ? t('{title}，{priority}，关键词：{keywords}', {
+                title: note.title,
+                priority,
+                keywords: keywordText
+              })
+            : t('{title}，{priority}', { title: note.title, priority })
+        }
       >
         <span className={`priority-mark priority-mark--${tier}`} aria-hidden="true">
           <span className="priority-mark__core" />
@@ -125,7 +136,10 @@ export function NoteItem({
           {note.title}
         </span>
         {keywordText && (
-          <span className="note__keywords" title={`关键词：${keywordText}`}>
+          <span
+            className="note__keywords"
+            title={t('关键词：{keywords}', { keywords: keywordText })}
+          >
             {keywordText}
           </span>
         )}
@@ -143,7 +157,7 @@ export function NoteItem({
             <p
               className="task__note note__content"
               onDoubleClick={handleContentDoubleClick}
-              title="双击编辑"
+              title={t('双击编辑')}
             >
               {note.content}
             </p>
@@ -151,28 +165,28 @@ export function NoteItem({
             <p
               className="task__note task__note--empty note__content"
               onDoubleClick={handleContentDoubleClick}
-              title="双击编辑"
+              title={t('双击编辑')}
             >
-              没有正文，双击或点击编辑可补充。
+              {t('没有正文，双击或点击编辑可补充。')}
             </p>
           )}
 
           <div className="task__meta">
             <span className="task__time">
               <Clock3 size={11.5} strokeWidth={2} />
-              {formatTaskTime(note.createdAt)}
+              {formatTaskTime(note.createdAt, language)}
             </span>
             <span className="meta-spacer" />
             {note.important && (
               <span className="meta-flag meta-flag--important">
                 <Flag size={11} strokeWidth={2.2} />
-                重要
+                {t('重要')}
               </span>
             )}
             {note.urgent && (
               <span className="meta-flag meta-flag--urgent">
                 <Zap size={11} strokeWidth={2.2} />
-                紧急
+                {t('紧急')}
               </span>
             )}
           </div>
@@ -190,21 +204,21 @@ export function NoteItem({
                 ) : (
                   <Sparkles size={13.5} strokeWidth={2} />
                 )}
-                {generating ? '生成中' : '生成关键词'}
+                {generating ? t('生成中') : t('生成关键词')}
               </button>
             ) : (
               <button type="button" className="text-action note-keyword-action" onClick={onEditKeywords}>
                 <Tags size={13.5} strokeWidth={2} />
-                编辑关键词
+                {t('编辑关键词')}
               </button>
             )}
             <button type="button" className="text-action" onClick={() => onStartEdit('title')}>
               <Pencil size={13} strokeWidth={2} />
-              编辑
+              {t('编辑')}
             </button>
             <button type="button" className="text-action" onClick={onArchive}>
               <Archive size={13.5} strokeWidth={2} />
-              归档
+              {t('归档')}
             </button>
             <button
               type="button"
@@ -212,7 +226,7 @@ export function NoteItem({
               onClick={onDelete}
             >
               <Trash2 size={13.5} strokeWidth={2} />
-              删除
+              {t('删除')}
             </button>
           </div>
 

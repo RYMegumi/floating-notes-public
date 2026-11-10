@@ -1,3 +1,5 @@
+import type { Language, LanguagePreference } from './i18n'
+
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 export type AppPlatform = 'darwin' | 'win32' | 'linux'
@@ -33,6 +35,7 @@ export interface WindowPosition {
 
 export interface AppSettings {
   theme: ThemePreference
+  language: LanguagePreference
   alwaysOnTop: boolean
   launchAtLogin: boolean
   windowPosition: WindowPosition | null
@@ -73,6 +76,7 @@ export interface BootstrapData {
   settings: AppSettings
   theme: ThemeInfo
   version: string
+  language: Language
   materialSupported: boolean
   material: 'acrylic' | 'vibrancy' | 'solid'
   autoStartSupported: boolean
@@ -107,6 +111,7 @@ export interface BulkKeywordsResult {
 export interface SettingsResult {
   settings: AppSettings
   theme: ThemeInfo
+  language: Language
   autoStartEnabled: boolean
   error?: string
 }

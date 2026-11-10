@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Archive, Pencil, Sparkles, Tags, Trash2 } from 'lucide-react'
 import type { Note } from '@shared/types'
+import { useI18n } from '../i18n'
 
 interface NoteContextMenuProps {
   note: Note
@@ -28,6 +29,7 @@ export function NoteContextMenu({
   onDelete,
   onClose
 }: NoteContextMenuProps) {
+  const { t } = useI18n()
   const menuRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
 
@@ -86,7 +88,7 @@ export function NoteContextMenu({
       ref={menuRef}
       className="context-menu"
       role="menu"
-      aria-label={`${note.title} 的操作`}
+      aria-label={t('{title} 的操作', { title: note.title })}
       style={{
         left: position?.left ?? x,
         top: position?.top ?? y,
@@ -106,7 +108,7 @@ export function NoteContextMenu({
           }}
         >
           <Sparkles size={14.5} />
-          {generating ? '生成关键词中…' : '生成关键词'}
+          {generating ? t('生成关键词中…') : t('生成关键词')}
         </button>
       ) : (
         <button
@@ -119,7 +121,7 @@ export function NoteContextMenu({
           }}
         >
           <Tags size={14.5} />
-          编辑关键词
+          {t('编辑关键词')}
         </button>
       )}
       <button
@@ -132,7 +134,7 @@ export function NoteContextMenu({
         }}
       >
         <Pencil size={14.5} />
-        编辑随记
+        {t('编辑随记')}
       </button>
       <button
         type="button"
@@ -144,7 +146,7 @@ export function NoteContextMenu({
         }}
       >
         <Archive size={14.5} />
-        归档随记
+        {t('归档随记')}
       </button>
       <div className="context-menu__separator" role="separator" />
       <button
@@ -157,7 +159,7 @@ export function NoteContextMenu({
         }}
       >
         <Trash2 size={14.5} />
-        删除随记
+        {t('删除随记')}
       </button>
     </div>,
     document.body

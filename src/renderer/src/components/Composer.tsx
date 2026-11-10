@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Flag, Plus, X, Zap } from 'lucide-react'
 import type { Note, Task } from '@shared/types'
+import { useI18n } from '../i18n'
 import { formatNoteDateTitle } from '../utils/date'
 
 export interface ComposerDraft {
@@ -21,9 +22,10 @@ interface ComposerProps {
 }
 
 export function Composer({ mode, kind, task, note, onSubmit, onCancel }: ComposerProps) {
+  const { language, t } = useI18n()
   const isNote = kind === 'note'
   const [defaultNoteTitle] = useState(() =>
-    kind === 'note' && mode === 'create' ? formatNoteDateTitle(new Date()) : ''
+    kind === 'note' && mode === 'create' ? formatNoteDateTitle(new Date(), language) : ''
   )
   const [title, setTitle] = useState(task?.title ?? note?.title ?? '')
   const [titleDirty, setTitleDirty] = useState(false)
@@ -62,13 +64,15 @@ export function Composer({ mode, kind, task, note, onSubmit, onCancel }: Compose
     })
   }
 
-  const heading = `${mode === 'create' ? '新建' : '编辑'}${isNote ? '随记' : '任务'}`
+  const heading = isNote
+    ? t(mode === 'create' ? '新建随记' : '编辑随记')
+    : t(mode === 'create' ? '新建任务' : '编辑任务')
   const titlePlaceholder = isNote
     ? mode === 'create'
       ? defaultNoteTitle
-      : '给这条随想起个标题…'
-    : '写下要做的事…'
-  const bodyPlaceholder = isNote ? '写点什么…' : '添加备注（可选）'
+      : t('给这条随想起个标题…')
+    : t('写下要做的事…')
+  const bodyPlaceholder = isNote ? t('写点什么…') : t('添加备注（可选）')
   const canSubmit = isNote && mode === 'create' ? true : Boolean(title.trim())
 
   return (
@@ -86,8 +90,8 @@ export function Composer({ mode, kind, task, note, onSubmit, onCancel }: Compose
           type="button"
           className="icon-button icon-button--small"
           onClick={onCancel}
-          aria-label="关闭编辑"
-          title="关闭"
+          aria-label={t('关闭编辑')}
+          title={t('关闭')}
         >
           <X size={15} strokeWidth={2} />
         </button>
@@ -102,7 +106,7 @@ export function Composer({ mode, kind, task, note, onSubmit, onCancel }: Compose
           setTitleDirty(true)
         }}
         placeholder={titlePlaceholder}
-        aria-label={isNote ? '随记标题' : '任务标题'}
+        aria-label={isNote ? t('随记标题') : t('任务标题')}
         maxLength={300}
         autoComplete="off"
       />
@@ -118,13 +122,13 @@ export function Composer({ mode, kind, task, note, onSubmit, onCancel }: Compose
           }
         }}
         placeholder={bodyPlaceholder}
-        aria-label={isNote ? '随记内容' : '任务备注'}
+        aria-label={isNote ? t('随记内容') : t('任务备注')}
         maxLength={20_000}
         rows={1}
       />
 
       <div className="composer__footer">
-        <div className="flag-group" aria-label={isNote ? '随记标记' : '任务标记'}>
+        <div className="flag-group" aria-label={isNote ? t('随记标记') : t('任务标记')}>
           <button
             type="button"
             className={`flag-toggle flag-toggle--important${important ? ' is-active' : ''}`}
@@ -132,7 +136,7 @@ export function Composer({ mode, kind, task, note, onSubmit, onCancel }: Compose
             aria-pressed={important}
           >
             <Flag size={12.5} strokeWidth={2.2} />
-            重要
+            {t('重要')}
           </button>
           <button
             type="button"
@@ -141,14 +145,14 @@ export function Composer({ mode, kind, task, note, onSubmit, onCancel }: Compose
             aria-pressed={urgent}
           >
             <Zap size={12.5} strokeWidth={2.2} />
-            紧急
+            {t('紧急')}
           </button>
         </div>
 
         <div className="composer__submit-group">
           <button type="submit" className="composer__submit" disabled={!canSubmit}>
             {mode === 'create' ? <Plus size={14} /> : <Check size={14} />}
-            {mode === 'create' ? '添加' : '保存'}
+            {mode === 'create' ? t('添加') : t('保存')}
           </button>
         </div>
       </div>

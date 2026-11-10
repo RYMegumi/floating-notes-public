@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 export interface ToastAction {
   label: string
@@ -19,6 +20,7 @@ interface ToastProps {
 }
 
 export function Toast({ toast, onDismiss }: ToastProps) {
+  const { t } = useI18n()
   const Icon = toast.tone === 'success' ? CircleCheck : toast.tone === 'error' ? CircleAlert : Info
 
   return createPortal(
@@ -41,8 +43,8 @@ export function Toast({ toast, onDismiss }: ToastProps) {
         type="button"
         className="toast__close"
         onClick={onDismiss}
-        aria-label="关闭提示"
-        title="关闭"
+        aria-label={t('关闭提示')}
+        title={t('关闭')}
       >
         <X size={12.5} strokeWidth={2.2} />
       </button>

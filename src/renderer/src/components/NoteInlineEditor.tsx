@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Check, Flag, X, Zap } from 'lucide-react'
 import type { Note } from '@shared/types'
+import { useI18n } from '../i18n'
 
 export interface NoteEditDraft {
   title: string
@@ -25,6 +26,7 @@ export function NoteInlineEditor({
   onSave,
   onCancel
 }: NoteInlineEditorProps) {
+  const { t } = useI18n()
   const [title, setTitle] = useState(note.title)
   const [titleDirty, setTitleDirty] = useState(false)
   const [content, setContent] = useState(note.content)
@@ -97,13 +99,13 @@ export function NoteInlineEditor({
       }}
     >
       <div className="note-editor__heading">
-        <span className="composer__label">编辑随记</span>
+        <span className="composer__label">{t('编辑随记')}</span>
         <button
           type="button"
           className="icon-button icon-button--small"
           onClick={onCancel}
-          aria-label="取消编辑"
-          title="取消"
+          aria-label={t('取消编辑')}
+          title={t('取消')}
         >
           <X size={15} strokeWidth={2} />
         </button>
@@ -117,8 +119,8 @@ export function NoteInlineEditor({
           setTitle(event.target.value)
           setTitleDirty(true)
         }}
-        placeholder="给这条随想起个标题…"
-        aria-label="随记标题"
+        placeholder={t('给这条随想起个标题…')}
+        aria-label={t('随记标题')}
         maxLength={300}
         autoComplete="off"
       />
@@ -128,14 +130,14 @@ export function NoteInlineEditor({
         className="note-editor__content"
         value={content}
         onChange={(event) => setContent(event.target.value)}
-        placeholder="写点什么…"
-        aria-label="随记内容"
+        placeholder={t('写点什么…')}
+        aria-label={t('随记内容')}
         maxLength={20_000}
         spellCheck={false}
       />
 
       <div className="note-editor__footer">
-        <div className="flag-group" aria-label="随记标记">
+        <div className="flag-group" aria-label={t('随记标记')}>
           <button
             type="button"
             className={`flag-toggle flag-toggle--important${important ? ' is-active' : ''}`}
@@ -143,7 +145,7 @@ export function NoteInlineEditor({
             aria-pressed={important}
           >
             <Flag size={12.5} strokeWidth={2.2} />
-            重要
+            {t('重要')}
           </button>
           <button
             type="button"
@@ -152,17 +154,17 @@ export function NoteInlineEditor({
             aria-pressed={urgent}
           >
             <Zap size={12.5} strokeWidth={2.2} />
-            紧急
+            {t('紧急')}
           </button>
         </div>
 
         <div className="note-editor__actions">
           <button type="button" className="ghost-button" onClick={onCancel}>
-            取消
+            {t('取消')}
           </button>
           <button type="submit" className="composer__submit" disabled={!title.trim()}>
             <Check size={14} />
-            保存
+            {t('保存')}
           </button>
         </div>
       </div>

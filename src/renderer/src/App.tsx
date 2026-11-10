@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { CircleAlert, RefreshCw, X } from 'lucide-react'
+import { translate, type Language } from '@shared/i18n'
 import type {
   AccountActionResult,
   AccountState,
@@ -24,9 +25,11 @@ import { NoteContextMenu } from './components/NoteContextMenu'
 import { SettingsView } from './components/SettingsView'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { Toast, type ToastMessage } from './components/Toast'
+import { I18nProvider } from './i18n'
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
+  language: 'system',
   alwaysOnTop: false,
   launchAtLogin: false,
   windowPosition: null
@@ -49,7 +52,7 @@ interface NoteEditState {
   caret?: number
 }
 type AppView = 'tasks' | 'settings'
-type PendingSetting = 'theme' | 'alwaysOnTop' | 'launchAtLogin' | null
+type PendingSetting = 'theme' | 'language' | 'alwaysOnTop' | 'launchAtLogin' | null
 type DeleteTarget = { kind: 'task'; task: Task } | { kind: 'note'; note: Note }
 
 interface ContextMenuState {
@@ -67,6 +70,7 @@ function makeId(prefix: 'task' | 'note'): string {
 export default function App() {
   const [loading, setLoading] = useState(true)
   const [fatalError, setFatalError] = useState<string | null>(null)
+  const [language, setLanguage] = useState<Language>('zh-CN')
   const [tasks, setTasks] = useState<Task[]>([])
   const [notes, setNotes] = useState<Note[]>([])
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
@@ -101,6 +105,12 @@ export default function App() {
   const [now, setNow] = useState(() => new Date())
   const [llmConfigured, setLlmConfigured] = useState(false)
   const [generatingNoteId, setGeneratingNoteId] = useState<string | null>(null)
+
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>) =>
+      translate(language, key, params),
+    [language]
+  )
 
   const tasksRef = useRef<Task[]>([])
   const notesRef = useRef<Note[]>([])
@@ -151,6 +161,7 @@ export default function App() {
     const unsubscribeSettings = window.fujian.onSettingsChanged((payload) => {
       if (!alive) return
       setSettings(payload.settings)
+      setLanguage(payload.language)
       setTheme(payload.theme)
       setAutoStartEnabled(payload.autoStartEnabled)
     })
@@ -207,6 +218,7 @@ export default function App() {
         setNotes(data.notes)
         setLlmConfigured(data.llmConfigured)
         setSettings(data.settings)
+        setLanguage(data.language)
         setTheme(data.theme)
         setAutoStartEnabled(data.autoStartEnabled)
         setAccount(
@@ -258,6 +270,10 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.material = material
   }, [material])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
@@ -361,21 +377,21 @@ export default function App() {
         .saveTasks(next)
         .then((result) => {
           if (!result.ok) {
-            showToast(result.error ?? '任务保存失败，请检查数据文件夹权限。', {
+            showToast(result.error ?? t('任务保存失败，请检查数据文件夹权限。'), {
               tone: 'error',
               duration: 8000
             })
           }
         })
         .catch((error: unknown) => {
-          showToast(`任务保存失败：${error instanceof Error ? error.message : String(error)}`, {
+          showToast(t('任务保存失败：{message}', { message: error instanceof Error ? error.message : String(error) }), {
             tone: 'error',
             duration: 8000
           })
         })
       return next
     },
-    [showToast]
+    [showToast, t]
   )
 
   const commitNotes = useCallback(
@@ -388,21 +404,21 @@ export default function App() {
         .saveNotes(next)
         .then((result) => {
           if (!result.ok) {
-            showToast(result.error ?? '随记保存失败，请检查数据文件夹权限。', {
+            showToast(result.error ?? t('随记保存失败，请检查数据文件夹权限。'), {
               tone: 'error',
               duration: 8000
             })
           }
         })
         .catch((error: unknown) => {
-          showToast(`随记保存失败：${error instanceof Error ? error.message : String(error)}`, {
+          showToast(t('随记保存失败：{message}', { message: error instanceof Error ? error.message : String(error) }), {
             tone: 'error',
             duration: 8000
           })
         })
       return next
     },
-    [showToast]
+    [showToast, t]
   )
 
   const persistSetting = useCallback(
@@ -413,13 +429,14 @@ export default function App() {
       try {
         const result = await window.fujian.updateSettings(patch)
         setSettings(result.settings)
+        setLanguage(result.language)
         setTheme(result.theme)
         setAutoStartEnabled(result.autoStartEnabled)
         if (result.error) {
           showToast(result.error, { tone: 'error', duration: 6500 })
         }
       } catch (error) {
-        showToast(`设置更新失败：${error instanceof Error ? error.message : String(error)}`, {
+        showToast(t('设置更新失败：{message}', { message: error instanceof Error ? error.message : String(error) }), {
           tone: 'error'
         })
       } finally {
@@ -427,7 +444,7 @@ export default function App() {
         setPendingSetting(null)
       }
     },
-    [showToast]
+    [showToast, t]
   )
 
   const openSettings = useCallback(() => {
@@ -609,9 +626,9 @@ export default function App() {
     async (noteId: string) => {
       if (generatingNoteId) return
       if (!llmConfigured) {
-        showToast('请先在设置中填写 DeepSeek API Key。', {
+        showToast(t('请先在设置中填写 DeepSeek API Key。'), {
           tone: 'info',
-          action: { label: '去设置', onClick: openSettings }
+          action: { label: t('去设置'), onClick: openSettings }
         })
         return
       }
@@ -619,12 +636,12 @@ export default function App() {
       try {
         const result = await window.fujian.generateNoteKeywords(noteId)
         if (!result.ok) {
-          showToast(result.error ?? '关键词生成失败。', { tone: 'error', duration: 6500 })
+          showToast(result.error ?? t('关键词生成失败。'), { tone: 'error', duration: 6500 })
           return
         }
-        showToast('关键词已生成', { tone: 'success' })
+        showToast(t('关键词已生成'), { tone: 'success' })
       } catch (error) {
-        showToast(`关键词生成失败：${error instanceof Error ? error.message : String(error)}`, {
+        showToast(t('关键词生成失败：{message}', { message: error instanceof Error ? error.message : String(error) }), {
           tone: 'error',
           duration: 6500
         })
@@ -632,11 +649,11 @@ export default function App() {
         setGeneratingNoteId(null)
       }
     },
-    [generatingNoteId, llmConfigured, openSettings, showToast]
+    [generatingNoteId, llmConfigured, openSettings, showToast, t]
   )
 
   const restoreTask = useCallback(
-    (taskId: string, message = '已恢复到任务列表') => {
+    (taskId: string, message?: string) => {
       const exists = tasksRef.current.some((task) => task.id === taskId && task.archivedAt)
       if (!exists) return
       const stamp = new Date().toISOString()
@@ -645,9 +662,9 @@ export default function App() {
           task.id === taskId ? { ...task, archivedAt: null, updatedAt: stamp } : task
         )
       )
-      showToast(message, { tone: 'success' })
+      showToast(message ?? t('已恢复到任务列表'), { tone: 'success' })
     },
-    [commitTasks, showToast]
+    [commitTasks, showToast, t]
   )
 
   const archiveTask = useCallback(
@@ -663,16 +680,16 @@ export default function App() {
       setFocusedId((current) => (current === taskId ? null : current))
       setExpandedId((current) => (current === taskId ? null : current))
       setContextMenu(null)
-      showToast('任务已归档，可在设置中随时找回', {
+      showToast(t('任务已归档，可在设置中随时找回'), {
         tone: 'success',
-        action: { label: '撤销', onClick: () => restoreTask(taskId, '已撤销归档') }
+        action: { label: t('撤销'), onClick: () => restoreTask(taskId, t('已撤销归档')) }
       })
     },
-    [commitTasks, restoreTask, showToast]
+    [commitTasks, restoreTask, showToast, t]
   )
 
   const restoreNote = useCallback(
-    (noteId: string, message = '已恢复到随记') => {
+    (noteId: string, message?: string) => {
       const exists = notesRef.current.some((note) => note.id === noteId && note.archivedAt)
       if (!exists) return
       const stamp = new Date().toISOString()
@@ -681,9 +698,9 @@ export default function App() {
           note.id === noteId ? { ...note, archivedAt: null, updatedAt: stamp } : note
         )
       )
-      showToast(message, { tone: 'success' })
+      showToast(message ?? t('已恢复到随记'), { tone: 'success' })
     },
-    [commitNotes, showToast]
+    [commitNotes, showToast, t]
   )
 
   const archiveNote = useCallback(
@@ -705,12 +722,12 @@ export default function App() {
         return next
       })
       setContextMenu(null)
-      showToast('随记已归档，可在设置中随时找回', {
+      showToast(t('随记已归档，可在设置中随时找回'), {
         tone: 'success',
-        action: { label: '撤销', onClick: () => restoreNote(noteId, '已撤销归档') }
+        action: { label: t('撤销'), onClick: () => restoreNote(noteId, t('已撤销归档')) }
       })
     },
-    [commitNotes, editingKeywordsId, noteEdit?.noteId, restoreNote, showToast]
+    [commitNotes, editingKeywordsId, noteEdit?.noteId, restoreNote, showToast, t]
   )
 
   const confirmDelete = useCallback(() => {
@@ -718,7 +735,7 @@ export default function App() {
     if (deleteTarget.kind === 'task') {
       const taskId = deleteTarget.task.id
       commitTasks((previous) => previous.filter((task) => task.id !== taskId))
-      showToast('归档任务已永久删除', { tone: 'info' })
+      showToast(t('归档任务已永久删除'), { tone: 'info' })
     } else {
       const noteId = deleteTarget.note.id
       commitNotes((previous) => previous.filter((note) => note.id !== noteId))
@@ -730,7 +747,7 @@ export default function App() {
         next.delete(noteId)
         return next
       })
-      showToast('随记已删除', { tone: 'info' })
+      showToast(t('随记已删除'), { tone: 'info' })
     }
     setDeleteTarget(null)
   }, [
@@ -739,7 +756,8 @@ export default function App() {
     deleteTarget,
     editingKeywordsId,
     noteEdit?.noteId,
-    showToast
+    showToast,
+    t
   ])
 
   const enterFocus = useCallback(
@@ -928,7 +946,7 @@ export default function App() {
     try {
       await window.fujian.openDataFolder()
     } catch (error) {
-      showToast(`无法打开数据文件夹：${error instanceof Error ? error.message : String(error)}`, {
+      showToast(t('无法打开数据文件夹：{message}', { message: error instanceof Error ? error.message : String(error) }), {
         tone: 'error'
       })
     }
@@ -936,7 +954,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="app app--loading" aria-busy="true" aria-label="正在加载浮笺">
+      <div className="app app--loading" aria-busy="true" aria-label={t('正在加载浮笺')}>
         <div className="loading-skeleton">
           <div className="skeleton skeleton--logo" />
           <div className="skeleton-lines">
@@ -958,15 +976,15 @@ export default function App() {
           <span className="error-state__icon" aria-hidden="true">
             <CircleAlert size={20} strokeWidth={1.9} />
           </span>
-          <h1>浮笺没能启动</h1>
-          <p>{fatalError ?? '无法读取应用信息。'}</p>
+          <h1>{t('浮笺没能启动')}</h1>
+          <p>{fatalError ?? t('无法读取应用信息。')}</p>
           <div className="error-state__actions">
             <button type="button" className="ghost-button" onClick={() => window.fujian.quit()}>
-              退出
+              {t('退出')}
             </button>
             <button type="button" className="primary-button" onClick={() => window.location.reload()}>
               <RefreshCw size={14} />
-              重新加载
+              {t('重新加载')}
             </button>
           </div>
         </div>
@@ -982,7 +1000,8 @@ export default function App() {
     contextMenu?.kind === 'note' ? notes.find((note) => note.id === contextMenu.id) ?? null : null
 
   return (
-    <div className={`app app--${material}${focusedMode ? ' app--focus-mode' : ''}`}>
+    <I18nProvider language={language}>
+      <div className={`app app--${material}${focusedMode ? ' app--focus-mode' : ''}`}>
       <span className="window-drag-edge window-drag-edge--top" aria-hidden="true" />
       <span className="window-drag-edge window-drag-edge--left" aria-hidden="true" />
       <span className="window-drag-edge window-drag-edge--right" aria-hidden="true" />
@@ -1006,8 +1025,8 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setWarningsVisible(false)}
-                aria-label="关闭提示"
-                title="关闭"
+                aria-label={t('关闭提示')}
+                title={t('关闭')}
               >
                 <X size={12.5} strokeWidth={2.2} />
               </button>
@@ -1064,9 +1083,9 @@ export default function App() {
                 composer ? null : (
                   <EmptyState
                     onAdd={openAddComposer}
-                    title="还没有随记"
-                    hint="把一闪而过的想法留在这里。"
-                    actionLabel="写第一条随记"
+                    title={t('还没有随记')}
+                    hint={t('把一闪而过的想法留在这里。')}
+                    actionLabel={t('写第一条随记')}
                   />
                 )
               ) : (
@@ -1107,6 +1126,7 @@ export default function App() {
       ) : (
         <SettingsView
           settings={settings}
+          languagePreference={settings.language}
           autoStartEnabled={autoStartEnabled}
           autoStartSupported={appMeta.autoStartSupported}
           archivedTasks={archivedTasks}
@@ -1118,6 +1138,9 @@ export default function App() {
           onBack={backToTasks}
           onThemeChange={(nextTheme: ThemePreference) =>
             void persistSetting({ theme: nextTheme }, 'theme')
+          }
+          onLanguageChange={(nextLanguage) =>
+            void persistSetting({ language: nextLanguage }, 'language')
           }
           onToggleAlwaysOnTop={() =>
             void persistSetting({ alwaysOnTop: !settings.alwaysOnTop }, 'alwaysOnTop')
@@ -1171,19 +1194,20 @@ export default function App() {
 
       {deleteTarget && (
         <ConfirmDialog
-          title={deleteTarget.kind === 'task' ? '永久删除这条归档？' : '删除这条随记？'}
+          title={deleteTarget.kind === 'task' ? t('永久删除这条归档？') : t('删除这条随记？')}
           description={
             deleteTarget.kind === 'task'
-              ? `“${deleteTarget.task.title}”将从本机数据中彻底移除，此操作无法撤销。`
-              : `“${deleteTarget.note.title}”将从随记中移除，此操作无法撤销。`
+              ? t('“{title}”将从本机数据中彻底移除，此操作无法撤销。', { title: deleteTarget.task.title })
+              : t('“{title}”将从随记中移除，此操作无法撤销。', { title: deleteTarget.note.title })
           }
-          confirmLabel={deleteTarget.kind === 'task' ? '永久删除' : '删除'}
+          confirmLabel={deleteTarget.kind === 'task' ? t('永久删除') : t('删除')}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       )}
 
-      {toast && <Toast toast={toast} onDismiss={() => dismissToast(toast.id)} />}
-    </div>
+        {toast && <Toast toast={toast} onDismiss={() => dismissToast(toast.id)} />}
+      </div>
+    </I18nProvider>
   )
 }

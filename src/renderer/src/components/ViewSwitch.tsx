@@ -1,3 +1,5 @@
+import { useI18n } from '../i18n'
+
 export type MainTab = 'tasks' | 'notes'
 
 interface ViewSwitchProps {
@@ -5,20 +7,21 @@ interface ViewSwitchProps {
   onChange: (value: MainTab) => void
 }
 
-const OPTIONS: Array<{ value: MainTab; label: string }> = [
-  { value: 'tasks', label: '待办' },
-  { value: 'notes', label: '随记' }
-]
-
 export function ViewSwitch({ value, onChange }: ViewSwitchProps) {
+  const { t } = useI18n()
+  const options: Array<{ value: MainTab; label: string }> = [
+    { value: 'tasks', label: t('待办') },
+    { value: 'notes', label: t('随记') }
+  ]
+
   return (
     <div className="main-switch">
-      <div className="view-switch" role="tablist" aria-label="内容类型">
+      <div className="view-switch" role="tablist" aria-label={t('内容类型')}>
         <span
           className={`view-switch__thumb${value === 'notes' ? ' is-notes' : ''}`}
           aria-hidden="true"
         />
-        {OPTIONS.map((option) => (
+        {options.map((option) => (
           <button
             key={option.value}
             type="button"

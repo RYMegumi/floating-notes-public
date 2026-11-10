@@ -13,6 +13,13 @@ import {
 } from 'electron'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import {
+  isLanguage,
+  isLanguagePreference,
+  resolveLanguage,
+  translate,
+  type Language
+} from '../shared/i18n'
 import { AccountService } from './account'
 import { LlmService } from './llm'
 import {
@@ -61,6 +68,7 @@ let llmService: LlmService
 let tasks: Task[] = []
 let notes: Note[] = []
 let settings: AppSettings
+let language: Language = 'zh-CN'
 let loadWarnings: string[] = []
 let runtimeWarnings: string[] = []
 let quitting = false
@@ -71,6 +79,7 @@ let positionSaveTimer: NodeJS.Timeout | null = null
 let lastAppliedHeight = 0
 let lastThemeKey = ''
 const hiddenTestMode = process.env.FUJIAN_TEST_HIDDEN === '1'
+const forcedLanguage = process.env.FUJIAN_LANGUAGE?.trim()
 
 app.setName('浮笺')
 app.setAppUserModelId('com.fujian.widget')
@@ -92,21 +101,6 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 async function startApp(): Promise<void> {
-  installApplicationMenu({
-    openApp: () => showWindow(true),
-    openSettings: () => {
-      showWindow(true)
-      sendToRenderer('ui:open-settings')
-    },
-    createTask: () => {
-      showWindow(true)
-      sendToRenderer('ui:new-task')
-    },
-    createNote: () => {
-      showWindow(true)
-      sendToRenderer('ui:new-note')
-    }
-  })
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({
       applicationName: app.name,
@@ -127,19 +121,24 @@ async function startApp(): Promise<void> {
   tasks = loaded.tasks
   notes = loaded.notes
   settings = loaded.settings
-  loadWarnings = store.loadWarnings
-  llmService = new LlmService(dataDir)
+  language = isLanguage(forcedLanguage)
+    ? forcedLanguage
+    : resolveLanguage(settings.language, app.getLocale())
+  loadWarnings = store.loadWarnings.map(translateWarning)
+  llmService = new LlmService(dataDir, () => language)
   nativeTheme.themeSource = settings.theme
+  installApplicationMenu(menuActions(), language)
 
   accountService = new AccountService({
     dataDir,
+    getLanguage: () => language,
     getTasks: () => tasks,
     setTasks: (next) => {
       tasks = next
       try {
         store.saveTasks(next)
       } catch (error) {
-        addWarning(`云端任务写入本地失败：${messageOf(error)}`)
+        addWarning(t('云端任务写入本地失败：{message}', { message: messageOf(error) }))
       }
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('tasks:changed', next)
@@ -151,7 +150,7 @@ async function startApp(): Promise<void> {
       try {
         store.saveNotes(next)
       } catch (error) {
-        addWarning(`云端随记写入本地失败：${messageOf(error)}`)
+        addWarning(t('云端随记写入本地失败：{message}', { message: messageOf(error) }))
       }
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('notes:changed', next)
@@ -172,7 +171,7 @@ async function startApp(): Promise<void> {
       try {
         store.saveSettings(settings)
       } catch (error) {
-        addWarning(`开机自启状态同步失败：${messageOf(error)}`)
+        addWarning(t('开机自启状态同步失败：{message}', { message: messageOf(error) }))
       }
     }
   }
@@ -199,6 +198,48 @@ async function startApp(): Promise<void> {
   screen.on('display-removed', keepWindowOnScreen)
   screen.on('display-added', keepWindowOnScreen)
   screen.on('display-metrics-changed', keepWindowOnScreen)
+}
+
+function t(key: string, params?: Record<string, string | number>): string {
+  return translate(language, key, params)
+}
+
+function translateWarning(warning: string): string {
+  const taskSkipped = warning.match(
+    /^有 (\d+) 条任务数据无法读取，已跳过；原始文件仍保留在备份目录。$/
+  )
+  if (taskSkipped) {
+    return t('有 {count} 条任务数据无法读取，已跳过；原始文件仍保留在备份目录。', {
+      count: taskSkipped[1] ?? ''
+    })
+  }
+  const noteSkipped = warning.match(
+    /^有 (\d+) 条随记数据无法读取，已跳过；原始文件仍保留在备份目录。$/
+  )
+  if (noteSkipped) {
+    return t('有 {count} 条随记数据无法读取，已跳过；原始文件仍保留在备份目录。', {
+      count: noteSkipped[1] ?? ''
+    })
+  }
+  return t(warning)
+}
+
+function menuActions() {
+  return {
+    openApp: () => showWindow(true),
+    openSettings: () => {
+      showWindow(true)
+      sendToRenderer('ui:open-settings')
+    },
+    createTask: () => {
+      showWindow(true)
+      sendToRenderer('ui:new-task')
+    },
+    createNote: () => {
+      showWindow(true)
+      sendToRenderer('ui:new-note')
+    }
+  }
 }
 
 function resolveInitialPosition(): { x: number; y: number } {
@@ -263,7 +304,11 @@ function createMainWindow(): void {
       ...windowAppearanceOptions(material)
     })
   } catch (error) {
-    addWarning(`系统透明/毛玻璃效果不可用，已切换到纯色外观：${messageOf(error)}`)
+    addWarning(
+      t('系统透明/毛玻璃效果不可用，已切换到纯色外观：{message}', {
+        message: messageOf(error)
+      })
+    )
     materialSupported = false
     material = 'solid'
     mainWindow = new BrowserWindow({
@@ -279,7 +324,7 @@ function createMainWindow(): void {
     // traffic lights so the surface reads as a widget, not a document window.
     window.setWindowButtonVisibility(false)
     if (supportsLiquidGlass() && !applyLiquidGlass(window)) {
-      addWarning('系统玻璃效果加载失败，已退回旧版半透明材质。')
+      addWarning(t('系统玻璃效果加载失败，已退回旧版半透明材质。'))
       window.setVibrancy('under-window')
     }
   }
@@ -384,7 +429,7 @@ function createTray(): void {
     process.platform === 'darwin' ? 'trayTemplate.png' : 'tray.png'
   )
   if (!existsSync(trayIconPath)) {
-    addWarning('托盘图标缺失，关闭窗口后将直接退出应用。')
+    addWarning(t('托盘图标缺失，关闭窗口后将直接退出应用。'))
     fallBackToDock()
     return
   }
@@ -395,7 +440,7 @@ function createTray(): void {
       trayImage.setTemplateImage(true)
     }
     tray = new Tray(trayImage)
-    tray.setToolTip('浮笺 · 桌面任务')
+    tray.setToolTip(t('浮笺 · 桌面任务'))
     tray.on('click', toggleWindow)
     if (process.platform === 'darwin') {
       // On macOS a context menu assigned with setContextMenu replaces the
@@ -407,7 +452,7 @@ function createTray(): void {
     }
     refreshTrayMenu()
   } catch (error) {
-    addWarning(`系统托盘创建失败：${messageOf(error)}`)
+    addWarning(t('系统托盘创建失败：{message}', { message: messageOf(error) }))
     tray = null
     fallBackToDock()
   }
@@ -416,18 +461,18 @@ function createTray(): void {
 function buildTrayMenu(): Menu {
   return Menu.buildFromTemplate([
     {
-      label: '打开浮笺',
+      label: t('打开浮笺'),
       click: () => showWindow(true)
     },
     {
-      label: '新建任务',
+      label: t('新建任务'),
       click: () => {
         showWindow(true)
         sendToRenderer('ui:new-task')
       }
     },
     {
-      label: '新建随记',
+      label: t('新建随记'),
       click: () => {
         showWindow(true)
         sendToRenderer('ui:new-note')
@@ -438,13 +483,13 @@ function buildTrayMenu(): Menu {
       // A native checkbox item reserves a wide check column on Windows,
       // leaving a large blank gutter in the tray menu. Use a normal item
       // with a changing label instead.
-      label: settings.alwaysOnTop ? '取消窗口置顶' : '窗口置顶',
+      label: settings.alwaysOnTop ? t('取消窗口置顶') : t('窗口置顶'),
       click: () => {
         updateSettings({ alwaysOnTop: !settings.alwaysOnTop }, 'tray')
       }
     },
     {
-      label: '设置与归档',
+      label: t('设置与归档'),
       click: () => {
         showWindow(true)
         sendToRenderer('ui:open-settings')
@@ -452,7 +497,7 @@ function buildTrayMenu(): Menu {
     },
     { type: 'separator' },
     {
-      label: '退出浮笺',
+      label: t('退出浮笺'),
       click: quitApp
     }
   ])
@@ -460,6 +505,7 @@ function buildTrayMenu(): Menu {
 
 function refreshTrayMenu(): void {
   if (!tray) return
+  tray.setToolTip(t('浮笺 · 桌面任务'))
   trayMenu = buildTrayMenu()
   if (process.platform === 'darwin') {
     // Left click should keep toggling the widget instead of opening a menu.
@@ -471,16 +517,16 @@ function refreshTrayMenu(): void {
 
 async function generateKeywordsForNote(noteId: string): Promise<NoteKeywordsResult> {
   if (!llmService.configured) {
-    return { ok: false, error: '请先在设置中填写 DeepSeek API Key。' }
+    return { ok: false, error: t('请先在设置中填写 DeepSeek API Key。') }
   }
   const note = notes.find((item) => item.id === noteId)
-  if (!note) return { ok: false, error: '这条随记已不存在。' }
+  if (!note) return { ok: false, error: t('这条随记已不存在。') }
 
   const result = await llmService.generateKeywords(note)
   if (!result.ok || !result.keywords) return result
 
   const current = notes.find((item) => item.id === noteId)
-  if (!current) return { ok: false, error: '这条随记已不存在。' }
+  if (!current) return { ok: false, error: t('这条随记已不存在。') }
   const keywords = result.keywords
   const next = notes.map((item) =>
     item.id === noteId
@@ -519,6 +565,7 @@ function registerIpc(): void {
       settings,
       theme: currentTheme(),
       version: app.getVersion(),
+      language,
       materialSupported,
       material,
       autoStartSupported: autoStartSupported(),
@@ -531,9 +578,9 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('tasks:save', (event, nextTasks: unknown): SaveTasksResult => {
-    if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
+    if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
     try {
-      if (!Array.isArray(nextTasks)) throw new Error('任务数据格式不正确。')
+      if (!Array.isArray(nextTasks)) throw new Error(t('任务数据格式不正确。'))
       const validated = validateTaskList(nextTasks)
       const previous = tasks
       store.saveTasks(validated)
@@ -546,9 +593,9 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('notes:save', (event, nextNotes: unknown): SaveNotesResult => {
-    if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
+    if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
     try {
-      if (!Array.isArray(nextNotes)) throw new Error('随记数据格式不正确。')
+      if (!Array.isArray(nextNotes)) throw new Error(t('随记数据格式不正确。'))
       const validated = validateNoteList(nextNotes)
       const previous = notes
       store.saveNotes(validated)
@@ -563,8 +610,8 @@ function registerIpc(): void {
   ipcMain.handle(
     'notes:generate-keywords',
     async (event, noteId: unknown): Promise<NoteKeywordsResult> => {
-      if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
-      if (typeof noteId !== 'string') return { ok: false, error: '随记标识不正确。' }
+      if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
+      if (typeof noteId !== 'string') return { ok: false, error: t('随记标识不正确。') }
       return generateKeywordsForNote(noteId)
     }
   )
@@ -572,9 +619,9 @@ function registerIpc(): void {
   ipcMain.handle(
     'notes:generate-all-keywords',
     async (event): Promise<BulkKeywordsResult> => {
-      if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
+      if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
       if (!llmService.configured) {
-        return { ok: false, error: '请先在设置中填写 DeepSeek API Key。' }
+        return { ok: false, error: t('请先在设置中填写 DeepSeek API Key。') }
       }
 
       const ids = notes
@@ -592,8 +639,8 @@ function registerIpc(): void {
   )
 
   ipcMain.handle('llm:set-key', (event, key: unknown): AccountActionResult => {
-    if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
-    if (typeof key !== 'string') return { ok: false, error: 'API Key 格式不正确。' }
+    if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
+    if (typeof key !== 'string') return { ok: false, error: t('API Key 格式不正确。') }
     try {
       llmService.setKey(key)
       return { ok: true }
@@ -603,7 +650,7 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('llm:clear-key', (event): AccountActionResult => {
-    if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
+    if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
     try {
       llmService.clearKey()
       return { ok: true }
@@ -620,8 +667,8 @@ function registerIpc(): void {
   ipcMain.handle(
     'account:request-code',
     async (event, email: unknown): Promise<AccountActionResult> => {
-      if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
-      if (typeof email !== 'string') return { ok: false, error: '请输入有效的邮箱地址。' }
+      if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
+      if (typeof email !== 'string') return { ok: false, error: t('请输入有效的邮箱地址。') }
       try {
         return await accountService.requestLoginCode(email)
       } catch (error) {
@@ -633,9 +680,9 @@ function registerIpc(): void {
   ipcMain.handle(
     'account:verify-code',
     async (event, email: unknown, code: unknown): Promise<AccountActionResult> => {
-      if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
+      if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
       if (typeof email !== 'string' || typeof code !== 'string') {
-        return { ok: false, error: '邮箱或验证码格式不正确。' }
+        return { ok: false, error: t('邮箱或验证码格式不正确。') }
       }
       try {
         return await accountService.verifyLoginCode(email, code)
@@ -646,12 +693,12 @@ function registerIpc(): void {
   )
 
   ipcMain.handle('account:sign-out', async (event): Promise<void> => {
-    if (!isTrustedSender(event.sender.id)) throw new Error('未知的窗口来源。')
+    if (!isTrustedSender(event.sender.id)) throw new Error(t('未知的窗口来源。'))
     await accountService.signOut()
   })
 
   ipcMain.handle('sync:now', async (event): Promise<AccountActionResult> => {
-    if (!isTrustedSender(event.sender.id)) return { ok: false, error: '未知的窗口来源。' }
+    if (!isTrustedSender(event.sender.id)) return { ok: false, error: t('未知的窗口来源。') }
     return accountService.syncNow()
   })
 
@@ -662,8 +709,9 @@ function registerIpc(): void {
         return {
           settings,
           theme: currentTheme(),
+          language,
           autoStartEnabled: readAutoStart(),
-          error: '未知的窗口来源。'
+          error: t('未知的窗口来源。')
         }
       }
       return updateSettings(isRecord(patch) ? patch : {}, 'renderer')
@@ -671,7 +719,7 @@ function registerIpc(): void {
   )
 
   ipcMain.handle('app:open-data-folder', async (event): Promise<void> => {
-    if (!isTrustedSender(event.sender.id)) throw new Error('未知的窗口来源。')
+    if (!isTrustedSender(event.sender.id)) throw new Error(t('未知的窗口来源。'))
     const error = await shell.openPath(dataDir)
     if (error) throw new Error(error)
   })
@@ -697,13 +745,13 @@ function validateTaskList(input: unknown[]): Task[] {
   const result: Task[] = []
 
   for (const value of input) {
-    if (!isRecord(value)) throw new Error('任务数据包含无效项。')
+    if (!isRecord(value)) throw new Error(t('任务数据包含无效项。'))
     const id = typeof value.id === 'string' ? value.id.trim().slice(0, 80) : ''
     const title = typeof value.title === 'string' ? value.title.trim().slice(0, 300) : ''
     const createdAt = validIsoDate(value.createdAt)
-    if (!id || !title || !createdAt) throw new Error('任务标题或创建时间无效。')
-    if (seen.has(id)) throw new Error('任务标识重复。')
-    if (result.length >= 5000) throw new Error('任务数量超过上限。')
+    if (!id || !title || !createdAt) throw new Error(t('任务标题或创建时间无效。'))
+    if (seen.has(id)) throw new Error(t('任务标识重复。'))
+    if (result.length >= 5000) throw new Error(t('任务数量超过上限。'))
     seen.add(id)
 
     result.push({
@@ -729,13 +777,13 @@ function validateNoteList(input: unknown[]): Note[] {
   const result: Note[] = []
 
   for (const value of input) {
-    if (!isRecord(value)) throw new Error('随记数据包含无效项。')
+    if (!isRecord(value)) throw new Error(t('随记数据包含无效项。'))
     const id = typeof value.id === 'string' ? value.id.trim().slice(0, 80) : ''
     const title = typeof value.title === 'string' ? value.title.trim().slice(0, 300) : ''
     const createdAt = validIsoDate(value.createdAt)
-    if (!id || !title || !createdAt) throw new Error('随记标题或创建时间无效。')
-    if (seen.has(id)) throw new Error('随记标识重复。')
-    if (result.length >= 5000) throw new Error('随记数量超过上限。')
+    if (!id || !title || !createdAt) throw new Error(t('随记标题或创建时间无效。'))
+    if (seen.has(id)) throw new Error(t('随记标识重复。'))
+    if (result.length >= 5000) throw new Error(t('随记数量超过上限。'))
     seen.add(id)
 
     const keywords = Array.isArray(value.keywords)
@@ -773,14 +821,18 @@ function updateSettings(patch: Record<string, unknown>, source: SettingsChangedP
     return {
       settings: sanitizeSettings({}),
       theme: currentTheme(),
+      language,
       autoStartEnabled: false,
-      error: '应用尚未完成初始化。'
+      error: t('应用尚未完成初始化。')
     }
   }
 
   const next: AppSettings = { ...settings }
   if (patch.theme === 'system' || patch.theme === 'light' || patch.theme === 'dark') {
     next.theme = patch.theme
+  }
+  if (isLanguagePreference(patch.language)) {
+    next.language = patch.language
   }
   if (typeof patch.alwaysOnTop === 'boolean') {
     next.alwaysOnTop = patch.alwaysOnTop
@@ -789,19 +841,28 @@ function updateSettings(patch: Record<string, unknown>, source: SettingsChangedP
   let error: string | undefined
   if (typeof patch.launchAtLogin === 'boolean') {
     if (autoStartSupported()) {
-      const applied = applyAutoStart(patch.launchAtLogin, addWarning)
+      const applied = applyAutoStart(
+        patch.launchAtLogin,
+        (message) => addWarning(t(message)),
+        t('浮笺 · 桌面任务')
+      )
       next.launchAtLogin = applied
       if (applied !== patch.launchAtLogin) {
-        error = '系统未能更新开机自启状态，请稍后重试。'
+        error = t('系统未能更新开机自启状态，请稍后重试。')
       }
     } else {
       next.launchAtLogin = false
-      error = '开机自启需要在打包后的正式版本中使用。'
+      error = t('开机自启需要在打包后的正式版本中使用。')
     }
   }
 
   const previous = settings
   settings = next
+  if (previous.language !== settings.language) {
+    language = isLanguage(forcedLanguage)
+      ? forcedLanguage
+      : resolveLanguage(settings.language, app.getLocale())
+  }
 
   if (previous.theme !== settings.theme) {
     nativeTheme.themeSource = settings.theme
@@ -815,14 +876,19 @@ function updateSettings(patch: Record<string, unknown>, source: SettingsChangedP
   try {
     store.saveSettings(settings)
   } catch (saveError) {
-    error = `${error ? `${error} ` : ''}设置未能写入磁盘：${messageOf(saveError)}`
+    error = `${error ? `${error} ` : ''}${t('设置未能写入磁盘：{message}', {
+      message: messageOf(saveError)
+    })}`
     addWarning(error)
   }
 
   const theme = currentTheme()
   const autoStartEnabled = autoStartSupported() ? readAutoStart() : false
-  const result: SettingsResult = { settings, theme, autoStartEnabled, ...(error ? { error } : {}) }
+  const result: SettingsResult = { settings, theme, language, autoStartEnabled, ...(error ? { error } : {}) }
 
+  if (previous.language !== settings.language) {
+    installApplicationMenu(menuActions(), language)
+  }
   broadcastTheme(true)
   refreshTrayMenu()
   broadcastSettings(source)
@@ -850,6 +916,7 @@ function broadcastSettings(source: SettingsChangedPayload['source']): void {
     source,
     settings,
     theme: currentTheme(),
+    language,
     autoStartEnabled: autoStartSupported() ? readAutoStart() : false
   }
   mainWindow.webContents.send('settings:changed', payload)
@@ -923,7 +990,7 @@ function persistWindowPosition(): void {
   try {
     store.saveSettings(settings)
   } catch (error) {
-    addWarning(`窗口位置保存失败：${messageOf(error)}`)
+    addWarning(t('窗口位置保存失败：{message}', { message: messageOf(error) }))
   }
 }
 

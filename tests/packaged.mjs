@@ -17,7 +17,7 @@ if (!fs.existsSync(executable)) {
   process.exit(1)
 }
 
-const env = { ...process.env }
+const env = { ...process.env, FUJIAN_LANGUAGE: 'zh-CN' }
 delete env.ELECTRON_RUN_AS_NODE
 
 let app

@@ -91,7 +91,7 @@ try {
   }
 
   console.log('Launching single-file portable EXE from C: (hidden)...')
-  const env = { ...process.env, FUJIAN_TEST_HIDDEN: '1' }
+  const env = { ...process.env, FUJIAN_TEST_HIDDEN: '1', FUJIAN_LANGUAGE: 'zh-CN' }
   delete env.ELECTRON_RUN_AS_NODE
   delete env.FUJIAN_DATA_DIR
   delete env.FUJIAN_STARTUP_DIR

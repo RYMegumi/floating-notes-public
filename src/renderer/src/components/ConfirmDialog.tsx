@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Trash2 } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 interface ConfirmDialogProps {
   title: string
@@ -17,6 +18,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel
 }: ConfirmDialogProps) {
+  const { t } = useI18n()
   const cancelRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function ConfirmDialog({
         <p id="confirm-description">{description}</p>
         <div className="confirm-dialog__actions">
           <button ref={cancelRef} type="button" className="ghost-button" onClick={onCancel}>
-            取消
+            {t('取消')}
           </button>
           <button type="button" className="danger-button" onClick={onConfirm}>
             {confirmLabel}

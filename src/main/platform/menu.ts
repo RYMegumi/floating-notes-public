@@ -1,4 +1,5 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron'
+import { translate, type Language } from '../../shared/i18n'
 
 export interface ApplicationMenuActions {
   openApp: () => void
@@ -12,7 +13,10 @@ export interface ApplicationMenuActions {
  * macOS still needs the standard application menu for Cmd+Q, copy/paste,
  * hide/minimize, and the About item.
  */
-export function installApplicationMenu(actions: ApplicationMenuActions): void {
+export function installApplicationMenu(
+  actions: ApplicationMenuActions,
+  language: Language = 'zh-CN'
+): void {
   if (process.platform !== 'darwin') {
     Menu.setApplicationMenu(null)
     return
@@ -24,7 +28,7 @@ export function installApplicationMenu(actions: ApplicationMenuActions): void {
       { role: 'about' },
       { type: 'separator' },
       {
-        label: '设置与归档…',
+        label: translate(language, '设置与归档…'),
         accelerator: 'Command+,',
         click: actions.openSettings
       },
@@ -40,21 +44,21 @@ export function installApplicationMenu(actions: ApplicationMenuActions): void {
   }
 
   const fileMenu: MenuItemConstructorOptions = {
-    label: '文件',
+    label: translate(language, '文件'),
     submenu: [
       {
-        label: '新建任务',
+        label: translate(language, '新建任务'),
         accelerator: 'Command+N',
         click: actions.createTask
       },
       {
-        label: '新建随记',
+        label: translate(language, '新建随记'),
         accelerator: 'Command+Shift+N',
         click: actions.createNote
       },
       { type: 'separator' },
       {
-        label: '打开浮笺',
+        label: translate(language, '打开浮笺'),
         accelerator: 'Command+0',
         click: actions.openApp
       },

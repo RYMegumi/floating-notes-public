@@ -13,6 +13,7 @@
 - **待办**：只显示标题，点击展开备注；支持重要/紧急排序、归档、恢复和专注模式。
 - **随记**：记录临时想法，支持关键词、编辑和归档。
 - **AI 关键词**：通过 DeepSeek 提取随记关键词，API Key 使用系统安全存储保存在本机。
+- **中文 / English**：界面默认跟随系统语言，也可以在设置中手动切换。
 - **登录与同步**：邮箱验证码登录；同一账号可以在不同设备同步任务和随记。
 
 > 登录和同步请使用 **GitHub Releases 中下载的官方安装包**。源码仓库不包含 Supabase 配置；从源码自行构建时，需要按 `.env.example` 配置自己的 `.env.local`。
@@ -54,6 +55,7 @@ SUPABASE_PUBLISHABLE_KEY=
 npm run build        # typecheck + 构建
 npm run test:ui      # 待办 UI 测试
 npm run test:notes   # 随记 UI 测试
+npm run test:i18n    # 英文界面测试
 npm run build:win    # Windows 便携版
 npm run build:mac:dir # macOS .app
 ```

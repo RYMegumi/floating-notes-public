@@ -25,6 +25,7 @@
     "test:portable-c": "node tests/portable-c.mjs",
     "test:mac": "node tests/macos.mjs",
     "test:notes": "node tests/notes.mjs",
+    "test:i18n": "node tests/i18n.mjs",
     "preview": "node tests/preview.mjs",
     "postinstall": "electron-builder install-app-deps"
   },

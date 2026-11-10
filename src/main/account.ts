@@ -9,6 +9,7 @@ import {
   writeFileSync
 } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { translate, type Language } from '../shared/i18n'
 import type {
   AccountActionResult,
   AccountState,
@@ -19,6 +20,7 @@ import type {
 
 interface AccountServiceOptions {
   dataDir: string
+  getLanguage: () => Language
   getTasks: () => Task[]
   setTasks: (tasks: Task[]) => void
   getNotes: () => Note[]
@@ -346,10 +348,14 @@ export class AccountService {
     }, delay)
   }
 
+  private t(key: string): string {
+    return translate(this.options.getLanguage(), key)
+  }
+
   async requestLoginCode(email: string): Promise<AccountActionResult> {
-    if (!this.client) return { ok: false, error: '账号服务未配置。' }
+    if (!this.client) return { ok: false, error: this.t('账号服务未配置。') }
     const address = normalizeEmail(email)
-    if (!isEmail(address)) return { ok: false, error: '请输入有效的邮箱地址。' }
+    if (!isEmail(address)) return { ok: false, error: this.t('请输入有效的邮箱地址。') }
 
     const { error } = await this.client.auth.signInWithOtp({
       email: address,
@@ -360,13 +366,15 @@ export class AccountService {
   }
 
   async verifyLoginCode(email: string, code: string): Promise<AccountActionResult> {
-    if (!this.client) return { ok: false, error: '账号服务未配置。' }
+    if (!this.client) return { ok: false, error: this.t('账号服务未配置。') }
     const address = normalizeEmail(email)
     const token = code.replace(/\s+/g, '')
-    if (!isEmail(address)) return { ok: false, error: '请输入有效的邮箱地址。' }
-    if (!/^\d{4,10}$/.test(token)) return { ok: false, error: '请输入邮件中的数字验证码。' }
+    if (!isEmail(address)) return { ok: false, error: this.t('请输入有效的邮箱地址。') }
+    if (!/^\d{4,10}$/.test(token)) {
+      return { ok: false, error: this.t('请输入邮件中的数字验证码。') }
+    }
 
-    let lastMessage = '验证码无效或已过期，请重新获取。'
+    let lastMessage = this.t('验证码无效或已过期，请重新获取。')
     for (const type of OTP_TYPES) {
       const { data, error } = await this.client.auth.verifyOtp({
         email: address,
@@ -392,8 +400,8 @@ export class AccountService {
   }
 
   async syncNow(): Promise<AccountActionResult> {
-    if (!this.client) return { ok: false, error: '账号服务未配置。' }
-    if (!this.user) return { ok: false, error: '请先登录。' }
+    if (!this.client) return { ok: false, error: this.t('账号服务未配置。') }
+    if (!this.user) return { ok: false, error: this.t('请先登录。') }
     if (this.syncPromise) return this.syncPromise
 
     this.syncPromise = this.doSync().finally(() => {
@@ -403,7 +411,7 @@ export class AccountService {
   }
 
   private async doSync(): Promise<AccountActionResult> {
-    if (!this.client) return { ok: false, error: '账号服务未配置。' }
+    if (!this.client) return { ok: false, error: this.t('账号服务未配置。') }
     this.setSyncState('syncing')
     try {
       const firstRows = await this.fetchCloudRows()
@@ -667,22 +675,24 @@ export class AccountService {
   private authError(message: string): string {
     const lower = message.toLowerCase()
     if (lower.includes('rate') || lower.includes('too many')) {
-      return '发送太频繁，请稍后再试。'
+      return this.t('发送太频繁，请稍后再试。')
     }
-    if (lower.includes('expired')) return '验证码已过期，请重新获取。'
+    if (lower.includes('expired')) return this.t('验证码已过期，请重新获取。')
     if (lower.includes('invalid') || lower.includes('token')) {
-      return '验证码无效，请检查后重试。'
+      return this.t('验证码无效，请检查后重试。')
     }
     if (lower.includes('fetch') || lower.includes('network')) {
-      return '网络连接失败，请检查网络后重试。'
+      return this.t('网络连接失败，请检查网络后重试。')
     }
     return message
   }
 
   private dataError(message: string): string {
-    if (message.toLowerCase().includes('fetch')) return '网络连接失败，请稍后重试。'
+    if (message.toLowerCase().includes('fetch')) {
+      return this.t('网络连接失败，请稍后重试。')
+    }
     if (message.toLowerCase().includes('row-level security')) {
-      return '没有权限读写这个账号的数据。'
+      return this.t('没有权限读写这个账号的数据。')
     }
     return message
   }

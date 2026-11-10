@@ -278,7 +278,7 @@ if (!browserExecutable) {
   process.exit(1)
 }
 
-const env = { ...process.env }
+const env = { ...process.env, FUJIAN_LANGUAGE: 'zh-CN' }
 const browser = await chromium.launch({
   executablePath: browserExecutable,
   headless: true,

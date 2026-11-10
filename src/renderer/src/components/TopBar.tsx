@@ -1,6 +1,7 @@
 import { Pin, Plus, Settings2 } from 'lucide-react'
 import type { AppPlatform } from '@shared/types'
 import type { MainTab } from './ViewSwitch'
+import { useI18n } from '../i18n'
 import { formatToday } from '../utils/date'
 
 interface TopBarProps {
@@ -24,9 +25,10 @@ export function TopBar({
   onAdd,
   onOpenSettings
 }: TopBarProps) {
-  const { monthDay, weekday } = formatToday(now)
+  const { language, t } = useI18n()
+  const { monthDay, weekday } = formatToday(now, language)
   const addShortcut = platform === 'darwin' ? '⌘N' : 'Ctrl+N'
-  const addLabel = mainTab === 'notes' ? '随记' : '任务'
+  const addAction = mainTab === 'notes' ? t('添加随记') : t('添加任务')
 
   return (
     <header className="topbar">
@@ -42,8 +44,8 @@ export function TopBar({
           type="button"
           className={`icon-button pin-button${alwaysOnTop ? ' is-active' : ''}`}
           onClick={onTogglePin}
-          title={alwaysOnTop ? '取消窗口置顶' : '窗口置顶'}
-          aria-label={alwaysOnTop ? '取消窗口置顶' : '窗口置顶'}
+          title={alwaysOnTop ? t('取消窗口置顶') : t('窗口置顶')}
+          aria-label={alwaysOnTop ? t('取消窗口置顶') : t('窗口置顶')}
           aria-pressed={alwaysOnTop}
         >
           <Pin size={16} strokeWidth={2} />
@@ -52,8 +54,10 @@ export function TopBar({
           type="button"
           className={`add-button${composerOpen ? ' is-open' : ''}`}
           onClick={onAdd}
-          title={composerOpen ? '关闭编辑' : `添加${addLabel} (${addShortcut})`}
-          aria-label={composerOpen ? '关闭编辑' : `添加${addLabel}`}
+          title={
+            composerOpen ? t('关闭编辑') : `${addAction} (${addShortcut})`
+          }
+          aria-label={composerOpen ? t('关闭编辑') : addAction}
         >
           <Plus size={19} strokeWidth={2.2} />
         </button>
@@ -61,8 +65,8 @@ export function TopBar({
           type="button"
           className="icon-button"
           onClick={onOpenSettings}
-          title="设置与归档"
-          aria-label="设置与归档"
+          title={t('设置与归档')}
+          aria-label={t('设置与归档')}
         >
           <Settings2 size={16.5} strokeWidth={1.9} />
         </button>

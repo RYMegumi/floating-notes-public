@@ -58,6 +58,7 @@ function check(condition, message) {
 const env = {
   ...process.env,
   FUJIAN_TEST_HIDDEN: '1',
+  FUJIAN_LANGUAGE: 'zh-CN',
   FUJIAN_DATA_DIR: dataDir,
   FUJIAN_STARTUP_DIR: startupDir
 }

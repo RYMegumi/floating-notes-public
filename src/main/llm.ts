@@ -8,6 +8,7 @@ import {
   writeFileSync
 } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { translate, type Language } from '../shared/i18n'
 import type { Note, NoteKeywordsResult } from '../shared/types'
 
 const KEY_FILE = 'llm-key.bin'
@@ -43,9 +44,16 @@ export class LlmService {
   private readonly keyPath: string
   private key = ''
 
-  constructor(dataDir: string) {
+  constructor(
+    dataDir: string,
+    private readonly getLanguage: () => Language = () => 'zh-CN'
+  ) {
     this.keyPath = join(dataDir, KEY_FILE)
     this.key = this.loadKey()
+  }
+
+  private t(key: string): string {
+    return translate(this.getLanguage(), key)
   }
 
   get configured(): boolean {
@@ -55,10 +63,10 @@ export class LlmService {
   setKey(value: string): void {
     const key = value.trim()
     if (!KEY_PATTERN.test(key)) {
-      throw new Error('DeepSeek API Key 格式不正确，应以 sk- 开头。')
+      throw new Error(this.t('DeepSeek API Key 格式不正确，应以 sk- 开头。'))
     }
     if (!safeStorage.isEncryptionAvailable()) {
-      throw new Error('系统安全存储不可用，无法保存 API Key。')
+      throw new Error(this.t('系统安全存储不可用，无法保存 API Key。'))
     }
     const encrypted = safeStorage.encryptString(key)
     mkdirSync(dirname(this.keyPath), { recursive: true })
@@ -79,7 +87,7 @@ export class LlmService {
 
   async generateKeywords(note: Note): Promise<NoteKeywordsResult> {
     if (!this.key) {
-      return { ok: false, error: '请先在设置中填写 DeepSeek API Key。' }
+      return { ok: false, error: this.t('请先在设置中填写 DeepSeek API Key。') }
     }
 
     const content = note.content.trim().slice(0, 6000)
@@ -101,11 +109,16 @@ export class LlmService {
             {
               role: 'system',
               content:
-                '你是中文笔记的关键词提取器。只输出 3 到 6 个简短关键词，用中文顿号分隔，不要解释、不要编号、不要引号。'
+                this.getLanguage() === 'en'
+                  ? 'You extract keywords from notes. Output only 3 to 6 short keywords separated by commas. No explanation, numbering, or quotes.'
+                  : '你是中文笔记的关键词提取器。只输出 3 到 6 个简短关键词，用中文顿号分隔，不要解释、不要编号、不要引号。'
             },
             {
               role: 'user',
-              content: `标题：${note.title}\n内容：${content || '（无正文）'}`
+              content:
+                this.getLanguage() === 'en'
+                  ? `Title: ${note.title}\nContent: ${content || '(no content)'}`
+                  : `标题：${note.title}\n内容：${content || '（无正文）'}`
             }
           ]
         }),
@@ -115,15 +128,18 @@ export class LlmService {
       if (!response.ok) {
         const status = response.status
         if (status === 401 || status === 403) {
-          return { ok: false, error: 'DeepSeek API Key 无效或已过期。' }
+          return { ok: false, error: this.t('DeepSeek API Key 无效或已过期。') }
         }
         if (status === 429) {
-          return { ok: false, error: 'DeepSeek 请求太频繁，请稍后再试。' }
+          return { ok: false, error: this.t('DeepSeek 请求太频繁，请稍后再试。') }
         }
         if (status === 402) {
-          return { ok: false, error: 'DeepSeek 账户余额不足。' }
+          return { ok: false, error: this.t('DeepSeek 账户余额不足。') }
         }
-        return { ok: false, error: `DeepSeek 请求失败（${status}）。` }
+        return {
+          ok: false,
+          error: translate(this.getLanguage(), 'DeepSeek 请求失败（{status}）。', { status })
+        }
       }
 
       const data = (await response.json()) as {
@@ -132,18 +148,21 @@ export class LlmService {
       const raw = data.choices?.[0]?.message?.content
       const keywords = typeof raw === 'string' ? parseKeywords(raw) : []
       if (keywords.length === 0) {
-        return { ok: false, error: '模型没有返回关键词，请重试。' }
+        return { ok: false, error: this.t('模型没有返回关键词，请重试。') }
       }
       return { ok: true, keywords }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        return { ok: false, error: 'DeepSeek 请求超时，请检查网络后重试。' }
+        return { ok: false, error: this.t('DeepSeek 请求超时，请检查网络后重试。') }
       }
       const message = messageOf(error)
       if (message.toLowerCase().includes('fetch') || message.toLowerCase().includes('network')) {
-        return { ok: false, error: '网络连接失败，请检查网络后重试。' }
+        return { ok: false, error: this.t('网络连接失败，请检查网络后重试。') }
       }
-      return { ok: false, error: `生成关键词失败：${message}` }
+      return {
+        ok: false,
+        error: translate(this.getLanguage(), '生成关键词失败：{message}', { message })
+      }
     } finally {
       clearTimeout(timeout)
     }

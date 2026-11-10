@@ -9,6 +9,7 @@ import {
 } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { randomBytes } from 'node:crypto'
+import { isLanguagePreference } from '../shared/i18n'
 import type { AppSettings, Note, Task, ThemePreference, WindowPosition } from '../shared/types'
 
 interface TaskFile {
@@ -23,6 +24,7 @@ interface NoteFile {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
+  language: 'system',
   alwaysOnTop: false,
   launchAtLogin: false,
   windowPosition: null
@@ -121,6 +123,9 @@ export function sanitizeSettings(value: unknown): AppSettings {
       typeof source.theme === 'string' && THEMES.includes(source.theme as ThemePreference)
         ? (source.theme as ThemePreference)
         : DEFAULT_SETTINGS.theme,
+    language: isLanguagePreference(source.language)
+      ? source.language
+      : DEFAULT_SETTINGS.language,
     alwaysOnTop:
       typeof source.alwaysOnTop === 'boolean'
         ? source.alwaysOnTop

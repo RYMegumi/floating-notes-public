@@ -44,7 +44,7 @@ function readWindowsAutoStart(): boolean {
   }
 }
 
-function applyWindowsAutoStart(enabled: boolean): boolean {
+function applyWindowsAutoStart(enabled: boolean, description: string): boolean {
   const shortcutPath = autoStartShortcutPath()
   if (!enabled) {
     if (existsSync(shortcutPath)) unlinkSync(shortcutPath)
@@ -56,7 +56,7 @@ function applyWindowsAutoStart(enabled: boolean): boolean {
   const created = shell.writeShortcutLink(shortcutPath, 'create', {
     target: executable,
     cwd: dirname(executable),
-    description: '浮笺 · 桌面任务',
+    description,
     icon: executable,
     iconIndex: 0,
     appUserModelId: 'com.fujian.widget'
@@ -83,7 +83,8 @@ export function readAutoStart(): boolean {
 
 export function applyAutoStart(
   enabled: boolean,
-  onWarning?: AutoStartWarning
+  onWarning?: AutoStartWarning,
+  description = '浮笺 · 桌面任务'
 ): boolean {
   if (!autoStartSupported()) return false
 
@@ -92,7 +93,7 @@ export function applyAutoStart(
       app.setLoginItemSettings({ openAtLogin: enabled })
       return readAutoStart()
     }
-    return applyWindowsAutoStart(enabled)
+    return applyWindowsAutoStart(enabled, description)
   } catch (error) {
     onWarning?.(`设置开机自启失败：${messageOf(error)}`)
     return readAutoStart()

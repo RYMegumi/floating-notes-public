@@ -16,6 +16,7 @@ import {
   Trash2,
   UserRound
 } from 'lucide-react'
+import type { LanguagePreference } from '@shared/i18n'
 import type {
   AccountActionResult,
   AccountState,
@@ -25,10 +26,12 @@ import type {
   Task,
   ThemePreference
 } from '@shared/types'
+import { useI18n } from '../i18n'
 import { formatArchiveTime } from '../utils/date'
 
 interface SettingsViewProps {
   settings: AppSettings
+  languagePreference: LanguagePreference
   autoStartEnabled: boolean
   autoStartSupported: boolean
   archivedTasks: Task[]
@@ -39,6 +42,7 @@ interface SettingsViewProps {
   pendingSetting: string | null
   onBack: () => void
   onThemeChange: (theme: ThemePreference) => void
+  onLanguageChange: (language: LanguagePreference) => void
   onToggleAlwaysOnTop: () => void
   onToggleAutoStart: () => void
   onRestore: (task: Task) => void
@@ -57,12 +61,18 @@ interface SettingsViewProps {
 
 const THEME_OPTIONS: Array<{
   value: ThemePreference
-  label: string
+  labelKey: string
   icon: typeof Monitor
 }> = [
-  { value: 'system', label: '跟随系统', icon: Monitor },
-  { value: 'light', label: '浅色', icon: Sun },
-  { value: 'dark', label: '深色', icon: Moon }
+  { value: 'system', labelKey: '跟随系统', icon: Monitor },
+  { value: 'light', labelKey: '浅色', icon: Sun },
+  { value: 'dark', labelKey: '深色', icon: Moon }
+]
+
+const LANGUAGE_OPTIONS: Array<{ value: LanguagePreference; label: string }> = [
+  { value: 'system', label: '跟随系统' },
+  { value: 'zh-CN', label: '中文' },
+  { value: 'en', label: 'English' }
 ]
 
 function SettingSwitch({
@@ -93,6 +103,7 @@ function SettingSwitch({
 
 export function SettingsView({
   settings,
+  languagePreference,
   autoStartEnabled,
   autoStartSupported,
   archivedTasks,
@@ -103,6 +114,7 @@ export function SettingsView({
   pendingSetting,
   onBack,
   onThemeChange,
+  onLanguageChange,
   onToggleAlwaysOnTop,
   onToggleAutoStart,
   onRestore,
@@ -118,6 +130,7 @@ export function SettingsView({
   onGenerateAllKeywords,
   onQuit
 }: SettingsViewProps) {
+  const { language, t } = useI18n()
   const settingsBusy = pendingSetting !== null
   const [archiveOpen, setArchiveOpen] = useState(false)
   const archivedEntries = [
@@ -154,20 +167,22 @@ export function SettingsView({
 
   const syncLabel = (() => {
     if (!account.user) return ''
-    if (account.sync.status === 'syncing') return '同步中'
-    if (account.sync.status === 'error') return '同步失败'
-    if (!account.sync.lastSyncedAt) return '尚未同步'
-    return `已同步 ${new Date(account.sync.lastSyncedAt).toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })}`
+    if (account.sync.status === 'syncing') return t('同步中')
+    if (account.sync.status === 'error') return t('同步失败')
+    if (!account.sync.lastSyncedAt) return t('尚未同步')
+    return t('已同步 {time}', {
+      time: new Date(account.sync.lastSyncedAt).toLocaleTimeString(
+        language === 'en' ? 'en-US' : 'zh-CN',
+        { hour: '2-digit', minute: '2-digit' }
+      )
+    })
   })()
 
   async function sendLoginCode(): Promise<void> {
     if (accountBusy) return
     const address = email.trim()
     if (!address) {
-      setAccountMessage({ tone: 'error', text: '请输入邮箱地址。' })
+      setAccountMessage({ tone: 'error', text: t('请输入邮箱地址。') })
       return
     }
     setAccountBusy('code')
@@ -177,14 +192,14 @@ export function SettingsView({
       if (result.ok) {
         setCodeSent(true)
         setCode('')
-        setAccountMessage({ tone: 'info', text: '验证码已发送。' })
+        setAccountMessage({ tone: 'info', text: t('验证码已发送。') })
       } else {
-        setAccountMessage({ tone: 'error', text: result.error ?? '验证码发送失败。' })
+        setAccountMessage({ tone: 'error', text: result.error ?? t('验证码发送失败。') })
       }
     } catch (error) {
       setAccountMessage({
         tone: 'error',
-        text: error instanceof Error ? error.message : '验证码发送失败。'
+        text: error instanceof Error ? error.message : t('验证码发送失败。')
       })
     } finally {
       setAccountBusy(null)
@@ -196,7 +211,7 @@ export function SettingsView({
     const address = email.trim()
     const token = code.trim()
     if (!token) {
-      setAccountMessage({ tone: 'error', text: '请输入验证码。' })
+      setAccountMessage({ tone: 'error', text: t('请输入验证码。') })
       return
     }
     setAccountBusy('verify')
@@ -206,12 +221,12 @@ export function SettingsView({
       if (result.ok) {
         setAccountMessage(null)
       } else {
-        setAccountMessage({ tone: 'error', text: result.error ?? '登录失败。' })
+        setAccountMessage({ tone: 'error', text: result.error ?? t('登录失败。') })
       }
     } catch (error) {
       setAccountMessage({
         tone: 'error',
-        text: error instanceof Error ? error.message : '登录失败。'
+        text: error instanceof Error ? error.message : t('登录失败。')
       })
     } finally {
       setAccountBusy(null)
@@ -230,7 +245,7 @@ export function SettingsView({
     } catch (error) {
       setAccountMessage({
         tone: 'error',
-        text: error instanceof Error ? error.message : '退出登录失败。'
+        text: error instanceof Error ? error.message : t('退出登录失败。')
       })
     } finally {
       setAccountBusy(null)
@@ -244,12 +259,12 @@ export function SettingsView({
     try {
       const result = await onSyncNow()
       if (!result.ok) {
-        setAccountMessage({ tone: 'error', text: result.error ?? '同步失败。' })
+        setAccountMessage({ tone: 'error', text: result.error ?? t('同步失败。') })
       }
     } catch (error) {
       setAccountMessage({
         tone: 'error',
-        text: error instanceof Error ? error.message : '同步失败。'
+        text: error instanceof Error ? error.message : t('同步失败。')
       })
     } finally {
       setAccountBusy(null)
@@ -265,14 +280,14 @@ export function SettingsView({
       if (result.ok) {
         setLlmKey('')
         setLlmKeyEditing(false)
-        setLlmMessage({ tone: 'info', text: 'API Key 已保存。' })
+        setLlmMessage({ tone: 'info', text: t('API Key 已保存。') })
       } else {
-        setLlmMessage({ tone: 'error', text: result.error ?? '保存失败。' })
+        setLlmMessage({ tone: 'error', text: result.error ?? t('保存失败。') })
       }
     } catch (error) {
       setLlmMessage({
         tone: 'error',
-        text: error instanceof Error ? error.message : '保存失败。'
+        text: error instanceof Error ? error.message : t('保存失败。')
       })
     } finally {
       setLlmBusy(false)
@@ -286,26 +301,26 @@ export function SettingsView({
     try {
       const result = await onGenerateAllKeywords()
       if (!result.ok) {
-        setBulkMessage({ tone: 'error', text: result.error ?? '生成失败。' })
+        setBulkMessage({ tone: 'error', text: result.error ?? t('生成失败。') })
         return
       }
       const total = result.total ?? 0
       const generated = result.generated ?? 0
       const failed = result.failed ?? 0
       if (total === 0) {
-        setBulkMessage({ tone: 'info', text: '所有随记都有关键词了。' })
+        setBulkMessage({ tone: 'info', text: t('所有随记都有关键词了。') })
       } else if (failed === 0) {
-        setBulkMessage({ tone: 'info', text: `已为 ${generated} 条随记生成关键词。` })
+        setBulkMessage({ tone: 'info', text: t('已为 {count} 条随记生成关键词。', { count: generated }) })
       } else {
         setBulkMessage({
           tone: 'error',
-          text: `已生成 ${generated} 条，${failed} 条失败。`
+          text: t('已生成 {count} 条，{failed} 条失败。', { count: generated, failed })
         })
       }
     } catch (error) {
       setBulkMessage({
         tone: 'error',
-        text: error instanceof Error ? error.message : '生成失败。'
+        text: error instanceof Error ? error.message : t('生成失败。')
       })
     } finally {
       setBulkBusy(false)
@@ -319,23 +334,23 @@ export function SettingsView({
           type="button"
           className="icon-button no-drag"
           onClick={onBack}
-          aria-label="返回任务列表"
-          title="返回"
+          aria-label={t('返回任务列表')}
+          title={t('返回')}
         >
           <ChevronLeft size={18} strokeWidth={2.1} />
         </button>
-        <h1>设置</h1>
+        <h1>{t('设置')}</h1>
       </header>
 
       <div className="settings-scroll">
         <section className="settings-section settings-section--account">
           <div className="settings-section__heading">
-            <h2>账户</h2>
+            <h2>{t('账户')}</h2>
             {account.user && <span>{syncLabel}</span>}
           </div>
 
           {!account.configured ? (
-            <div className="account-unavailable">账号服务未配置</div>
+            <div className="account-unavailable">{t('账号服务未配置')}</div>
           ) : account.user ? (
             <div className="account-card">
               <div className="account-user-row">
@@ -348,7 +363,7 @@ export function SettingsView({
                   </span>
                   {account.sync.status === 'error' && (
                     <span className="account-sync-error">
-                      {account.sync.error ?? '同步失败'}
+                      {account.sync.error ?? t('同步失败')}
                     </span>
                   )}
                 </div>
@@ -363,17 +378,17 @@ export function SettingsView({
                     strokeWidth={2.1}
                     className={account.sync.status === 'syncing' ? 'is-spinning' : undefined}
                   />
-                  {account.sync.status === 'syncing' ? '同步中' : '同步'}
+                  {account.sync.status === 'syncing' ? t('同步中') : t('同步')}
                 </button>
                 <button
                   type="button"
                   className="account-action-link account-action-link--quiet"
                   onClick={() => void signOut()}
                   disabled={accountBusy !== null}
-                  title="退出登录"
+                  title={t('退出登录')}
                 >
                   <LogOut size={12.5} strokeWidth={2.1} />
-                  退出
+                  {t('退出')}
                 </button>
               </div>
               {accountMessage && (
@@ -401,8 +416,8 @@ export function SettingsView({
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="邮箱"
-                    aria-label="邮箱"
+                    placeholder={t('邮箱')}
+                    aria-label={t('邮箱')}
                     autoComplete="email"
                     disabled={accountBusy !== null}
                   />
@@ -411,7 +426,7 @@ export function SettingsView({
                     className="account-submit"
                     disabled={accountBusy !== null || !email.trim()}
                   >
-                    {accountBusy === 'code' ? '发送中' : '发送验证码'}
+                    {accountBusy === 'code' ? t('发送中') : t('发送验证码')}
                   </button>
                 </div>
               ) : (
@@ -430,7 +445,7 @@ export function SettingsView({
                       }}
                       disabled={accountBusy !== null}
                     >
-                      更换邮箱
+                      {t('更换邮箱')}
                     </button>
                   </div>
                   <div className="account-input-row">
@@ -440,8 +455,8 @@ export function SettingsView({
                       inputMode="numeric"
                       value={code}
                       onChange={(event) => setCode(event.target.value)}
-                      placeholder="验证码"
-                      aria-label="验证码"
+                      placeholder={t('验证码')}
+                      aria-label={t('验证码')}
                       autoComplete="one-time-code"
                       maxLength={10}
                       disabled={accountBusy !== null}
@@ -451,7 +466,7 @@ export function SettingsView({
                       className="account-submit account-submit--primary"
                       disabled={accountBusy !== null || !code.trim()}
                     >
-                      {accountBusy === 'verify' ? '登录中' : '登录'}
+                      {accountBusy === 'verify' ? t('登录中') : t('登录')}
                     </button>
                   </div>
                 </>
@@ -469,8 +484,8 @@ export function SettingsView({
 
           <div className="llm-key-block">
             <div className="settings-section__heading llm-key-block__heading">
-              <h2>AI 关键词</h2>
-              <span>{llmConfigured ? 'DeepSeek 已配置' : 'DeepSeek 未配置'}</span>
+              <h2>{t('AI 关键词')}</h2>
+              <span>{llmConfigured ? t('DeepSeek 已配置') : t('DeepSeek 未配置')}</span>
             </div>
             <div className="account-input-row">
               <input
@@ -489,9 +504,9 @@ export function SettingsView({
                   if (!llmKey.trim()) setLlmKeyEditing(false)
                 }}
                 placeholder={
-                  llmConfigured ? '输入新 Key' : 'DeepSeek API Key（sk-…）'
+                  llmConfigured ? t('输入新 Key') : t('DeepSeek API Key（sk-…）')
                 }
-                aria-label="DeepSeek API Key"
+                aria-label={t('DeepSeek API Key')}
                 autoComplete="off"
                 spellCheck={false}
                 disabled={llmBusy}
@@ -502,7 +517,7 @@ export function SettingsView({
                 onClick={() => void saveLlmKey()}
                 disabled={llmBusy || !llmKey.trim()}
               >
-                {llmBusy ? '保存中' : '保存'}
+                {llmBusy ? t('保存中') : t('保存')}
               </button>
             </div>
             <button
@@ -513,8 +528,8 @@ export function SettingsView({
             >
               <Sparkles size={13} strokeWidth={2} />
               {bulkBusy
-                ? '正在为缺少关键词的随记生成…'
-                : '为没有关键词的随记生成关键词'}
+                ? t('正在为缺少关键词的随记生成…')
+                : t('为没有关键词的随记生成关键词')}
             </button>
             {llmMessage && (
               <p
@@ -537,9 +552,9 @@ export function SettingsView({
 
         <section className="settings-section">
           <div className="settings-section__heading">
-            <h2>外观</h2>
+            <h2>{t('外观')}</h2>
           </div>
-          <div className="theme-segment" role="group" aria-label="主题">
+          <div className="theme-segment" role="group" aria-label={t('主题')}>
             {THEME_OPTIONS.map((option) => {
               const Icon = option.icon
               const active = settings.theme === option.value
@@ -553,7 +568,7 @@ export function SettingsView({
                   aria-pressed={active}
                 >
                   <Icon size={14} strokeWidth={2} />
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               )
             })}
@@ -562,19 +577,43 @@ export function SettingsView({
 
         <section className="settings-section">
           <div className="settings-section__heading">
-            <h2>窗口</h2>
+            <h2>{t('语言')}</h2>
+          </div>
+          <div className="theme-segment" role="group" aria-label={t('语言')}>
+            {LANGUAGE_OPTIONS.map((option) => {
+              const active = languagePreference === option.value
+              const label = option.value === 'system' ? t('跟随系统') : option.label
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`theme-segment__item${active ? ' is-active' : ''}`}
+                  onClick={() => onLanguageChange(option.value)}
+                  disabled={settingsBusy}
+                  aria-pressed={active}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <div className="settings-section__heading">
+            <h2>{t('窗口')}</h2>
           </div>
           <div className="setting-row">
             <div className="setting-row__icon" aria-hidden="true">
               <Pin size={15.5} strokeWidth={2} />
             </div>
             <div className="setting-row__text">
-              <span className="setting-row__title">始终置顶</span>
+              <span className="setting-row__title">{t('始终置顶')}</span>
             </div>
             <SettingSwitch
               checked={settings.alwaysOnTop}
               disabled={settingsBusy}
-              label="始终置顶"
+              label={t('始终置顶')}
               onClick={onToggleAlwaysOnTop}
             />
           </div>
@@ -583,12 +622,12 @@ export function SettingsView({
               <Power size={15.5} strokeWidth={2} />
             </div>
             <div className="setting-row__text">
-              <span className="setting-row__title">开机自启</span>
+              <span className="setting-row__title">{t('开机自启')}</span>
             </div>
             <SettingSwitch
               checked={autoStartEnabled}
               disabled={settingsBusy || !autoStartSupported}
-              label="开机自启"
+              label={t('开机自启')}
               onClick={onToggleAutoStart}
             />
           </div>
@@ -596,8 +635,8 @@ export function SettingsView({
 
         <section className="settings-section">
           <div className="settings-section__heading">
-            <h2>归档</h2>
-            <span>{archivedCount > 0 ? `${archivedCount} 项归档` : '已完成与随记'}</span>
+            <h2>{t('归档')}</h2>
+            <span>{archivedCount > 0 ? t('{count} 项归档', { count: archivedCount }) : t('已完成与随记')}</span>
           </div>
 
           {archivedCount === 0 ? (
@@ -606,8 +645,8 @@ export function SettingsView({
                 <Archive size={17} strokeWidth={1.8} />
               </span>
               <div>
-                <p>还没有归档</p>
-                <span>右键任务或随记并选择归档，完成的事项会留在这里。</span>
+                <p>{t('还没有归档')}</p>
+                <span>{t('右键任务或随记并选择归档，完成的事项会留在这里。')}</span>
               </div>
             </div>
           ) : (
@@ -620,16 +659,16 @@ export function SettingsView({
               >
                 <span className="archive-toggle__label">
                   <Archive size={13.5} strokeWidth={1.8} />
-                  {archiveOpen ? '收起归档' : '查看归档'}
+                  {archiveOpen ? t('收起归档') : t('查看归档')}
                 </span>
                 <span className="archive-toggle__meta">
-                  {archivedCount} 项
+                  {t('{count} 项', { count: archivedCount })}
                   <ChevronDown size={13.5} strokeWidth={2} aria-hidden="true" />
                 </span>
               </button>
 
               {archiveOpen && (
-                <div className="archive-list archive-list--open" aria-label="归档内容">
+                <div className="archive-list archive-list--open" aria-label={t('归档内容')}>
                   {archivedEntries.map((entry) => {
                     const isTask = entry.kind === 'task'
                     const title = isTask ? entry.task.title : entry.note.title
@@ -649,8 +688,8 @@ export function SettingsView({
                               onClick={() =>
                                 isTask ? onRestore(entry.task) : onRestoreNote(entry.note)
                               }
-                              title={isTask ? '恢复到任务列表' : '恢复到随记'}
-                              aria-label={`恢复 ${title}`}
+                              title={isTask ? t('恢复到任务列表') : t('恢复到随记')}
+                              aria-label={t('恢复 {title}', { title })}
                             >
                               <RotateCcw size={13} strokeWidth={2} />
                             </button>
@@ -662,8 +701,8 @@ export function SettingsView({
                                   ? onRequestDelete(entry.task)
                                   : onRequestDeleteNote(entry.note)
                               }
-                              title="永久删除"
-                              aria-label={`永久删除 ${title}`}
+                              title={t('永久删除')}
+                              aria-label={t('永久删除 {title}', { title })}
                             >
                               <Trash2 size={13} strokeWidth={2} />
                             </button>
@@ -672,19 +711,19 @@ export function SettingsView({
                         {body && <p className="archive-item__note">{body}</p>}
                         <div className="archive-item__meta">
                           <span className={`archive-kind archive-kind--${entry.kind}`}>
-                            {isTask ? '待办' : '随记'}
+                            {isTask ? t('待办') : t('随记')}
                           </span>
-                          <span>{formatArchiveTime(archivedAt ?? '')}</span>
+                          <span>{formatArchiveTime(archivedAt ?? '', language)}</span>
                           {keywords.length > 0 && (
                             <span className="archive-item__keywords" title={keywords.join(' · ')}>
                               {keywords.join(' · ')}
                             </span>
                           )}
                           {important && (
-                            <span className="archive-flag archive-flag--important">重要</span>
+                            <span className="archive-flag archive-flag--important">{t('重要')}</span>
                           )}
                           {urgent && (
-                            <span className="archive-flag archive-flag--urgent">紧急</span>
+                            <span className="archive-flag archive-flag--urgent">{t('紧急')}</span>
                           )}
                         </div>
                       </article>
@@ -698,14 +737,14 @@ export function SettingsView({
 
         <section className="settings-section settings-section--data">
           <div className="settings-section__heading">
-            <h2>数据</h2>
+            <h2>{t('数据')}</h2>
           </div>
           <button type="button" className="data-row" onClick={onOpenDataFolder}>
             <span className="data-row__icon" aria-hidden="true">
               <FolderOpen size={15} strokeWidth={1.9} />
             </span>
             <span className="data-row__text">
-              <span>打开数据文件夹</span>
+              <span>{t('打开数据文件夹')}</span>
               <span className="data-row__path" title={dataDir}>
                 {dataDir}
               </span>
@@ -715,7 +754,7 @@ export function SettingsView({
 
         <footer className="settings-footer">
           <button type="button" className="quit-button" onClick={onQuit}>
-            退出浮笺
+            {t('退出浮笺')}
           </button>
         </footer>
       </div>
