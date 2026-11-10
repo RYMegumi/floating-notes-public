@@ -27,10 +27,10 @@ fujian.fyi
 https://github.com/RYMegumi/floating-notes-public/releases/latest
 ```
 
-每个版本打一个 tag，例如 `v1.3.0`，然后在 Release 里上传：
+每个版本打一个 tag，例如 `v1.4.0`，然后在 Release 里上传：
 
 ```text
-浮笺-1.3.0-便携版.exe
+浮笺-1.4.0-便携版.exe
 ```
 
 页面上的「下载 Windows 版」和「前往 GitHub 下载」都指向 latest release，发新版本时不需要改网页。

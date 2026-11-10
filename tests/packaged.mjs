@@ -69,7 +69,7 @@ try {
     focused: BrowserWindow.getAllWindows()[0].isFocused()
   }))
   check(packagedState.isPackaged, '正在运行打包后的应用')
-  check(packagedState.version === '1.3.0', '打包版本号为 1.3.0')
+  check(packagedState.version === '1.4.0', '打包版本号为 1.4.0')
   check(!packagedState.visible && !packagedState.focused, '打包应用测试窗口保持隐藏')
   check(
     packagedState.userData.toLowerCase() === dataDir.toLowerCase(),

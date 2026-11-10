@@ -197,7 +197,7 @@ function mockInitialization(payload) {
       notes: structuredClone(notes),
       settings: { ...settings },
       theme: themeResult(),
-      version: '1.3.0',
+      version: '1.4.0',
       platform: payload.platform ?? 'win32',
       materialSupported: true,
       material: payload.material ?? 'acrylic',
