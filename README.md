@@ -68,6 +68,8 @@ npm run build:win:portable # 便携版（旧格式）
 npm run build:mac:dir  # macOS .app
 ```
 
+发布不需要每次手动双平台打包：平时推送 `main` 不产生 Release；准备发布时更新版本并打 `v*` tag，GitHub Actions 会构建 Windows 安装包和 macOS DMG，并生成一个 draft Release。也可以在 Actions 里手动运行 `Build installers`，只下载构建产物，不发布。
+
 ### 目录
 
 ```text
@@ -148,6 +150,8 @@ npm run build:win          # Windows installer
 npm run build:win:portable # legacy portable build
 npm run build:mac:dir      # macOS .app
 ```
+
+You do not need to package both platforms locally. Pushing `main` does not create a release. When you are ready to ship, bump the version and push a `v*` tag; GitHub Actions builds the Windows installer and macOS DMG and creates a draft Release. You can also run `Build installers` manually in Actions to download artifacts without publishing.
 
 ### Structure
 
