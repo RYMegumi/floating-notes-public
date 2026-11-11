@@ -2687,14 +2687,6 @@ textarea:focus-visible {
   opacity: 0.72;
 }
 
-.note-delete-action {
-  margin-left: auto;
-}
-
-.note-delete-action:hover {
-  color: var(--danger);
-}
-
 .llm-key-block {
   margin-top: 12px;
   padding-top: 11px;

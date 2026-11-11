@@ -7,7 +7,6 @@ import {
   Pencil,
   Sparkles,
   Tags,
-  Trash2,
   Zap
 } from 'lucide-react'
 import type { MouseEvent } from 'react'
@@ -36,7 +35,6 @@ interface NoteItemProps {
   onSaveKeywords: (keywords: string[]) => void
   onCancelKeywords: () => void
   onArchive: () => void
-  onDelete: () => void
   onContextMenu: (event: MouseEvent<HTMLElement>) => void
 }
 
@@ -58,7 +56,6 @@ export function NoteItem({
   onSaveKeywords,
   onCancelKeywords,
   onArchive,
-  onDelete,
   onContextMenu
 }: NoteItemProps) {
   const { language, t } = useI18n()
@@ -216,17 +213,9 @@ export function NoteItem({
               <Pencil size={13} strokeWidth={2} />
               {t('编辑')}
             </button>
-            <button type="button" className="text-action" onClick={onArchive}>
+            <button type="button" className="text-action archive-action" onClick={onArchive}>
               <Archive size={13.5} strokeWidth={2} />
               {t('归档')}
-            </button>
-            <button
-              type="button"
-              className="text-action note-delete-action"
-              onClick={onDelete}
-            >
-              <Trash2 size={13.5} strokeWidth={2} />
-              {t('删除')}
             </button>
           </div>
 

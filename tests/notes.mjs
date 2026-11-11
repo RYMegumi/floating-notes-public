@@ -272,7 +272,20 @@ try {
   check((await noteTitles()).includes('改过标题的随记'), '随记可以在原位置编辑标题和正文')
 
   const edited = page.locator('.note', { hasText: '改过标题的随记' })
-  await edited.getByRole('button', { name: '删除' }).click()
+  const editedActions = edited.locator('.task__actions button')
+  check((await editedActions.count()) === 3, '随记操作区保留三个按钮')
+  check(
+    (await edited.getByRole('button', { name: '删除', exact: true }).count()) === 0,
+    '随记操作区不再显示删除按钮'
+  )
+  check((await editedActions.last().innerText()).trim() === '归档', '归档位于随记操作区最右侧')
+  await edited.click({ button: 'right' })
+  await page.locator('.context-menu').waitFor({ state: 'visible' })
+  check(
+    (await page.getByRole('menuitem', { name: '删除随记' }).count()) === 1,
+    '删除仍保留在随记右键菜单'
+  )
+  await page.getByRole('menuitem', { name: '删除随记' }).click()
   await page.locator('.confirm-dialog').waitFor({ state: 'visible' })
   check(
     (await page.locator('.confirm-dialog').innerText()).includes('删除这条随记'),
@@ -309,7 +322,8 @@ try {
     (await dateNote.locator('.note__title--auto').innerText()) === todayTitle,
     '自动日期标题使用更暗的样式'
   )
-  await dateNote.getByRole('button', { name: '删除' }).click()
+  await dateNote.click({ button: 'right' })
+  await page.getByRole('menuitem', { name: '删除随记' }).click()
   await page.locator('.confirm-dialog .danger-button').click()
   await page.locator('.confirm-dialog').waitFor({ state: 'hidden' })
   await page.waitForTimeout(250)

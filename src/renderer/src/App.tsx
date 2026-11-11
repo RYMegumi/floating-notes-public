@@ -1114,7 +1114,6 @@ export default function App() {
                       onSaveKeywords={(keywords) => saveNoteKeywords(note.id, keywords)}
                       onCancelKeywords={cancelKeywordEdit}
                       onArchive={() => archiveNote(note.id)}
-                      onDelete={() => setDeleteTarget({ kind: 'note', note })}
                       onContextMenu={(event) => handleContextMenu(event, 'note', note.id)}
                     />
                   ))}
