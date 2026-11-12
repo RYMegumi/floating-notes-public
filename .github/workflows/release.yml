@@ -46,6 +46,19 @@ jobs:
         run: |
           node -e "const p=require('./package.json'); const tag=process.env.GITHUB_REF_NAME.replace(/^v/,''); if(p.version!==tag){console.error('package.json version '+p.version+' does not match tag v'+tag); process.exit(1)}"
 
+      - name: Write app environment
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in repository Actions secrets."
+            exit 1
+          fi
+          printf 'SUPABASE_URL=%s\nSUPABASE_PUBLISHABLE_KEY=%s\n' \
+            "$SUPABASE_URL" "$SUPABASE_PUBLISHABLE_KEY" > .env.local
+
       - name: Build installer
         run: ${{ matrix.command }}
         env:

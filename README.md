@@ -70,6 +70,8 @@ npm run build:mac:dir  # macOS .app
 
 发布不需要每次手动双平台打包：平时推送 `main` 不产生 Release；准备发布时更新版本并打 `v*` tag，GitHub Actions 会构建 Windows 安装包和 macOS DMG，并生成一个 draft Release。也可以在 Actions 里手动运行 `Build installers`，只下载构建产物，不发布。
 
+> CI 构建需要在仓库 Actions secrets 中配置 `SUPABASE_URL` 和 `SUPABASE_PUBLISHABLE_KEY`；本地构建需要 `.env.local`。否则安装包会显示“账号服务未配置”。
+
 ### 目录
 
 ```text
@@ -152,6 +154,8 @@ npm run build:mac:dir      # macOS .app
 ```
 
 You do not need to package both platforms locally. Pushing `main` does not create a release. When you are ready to ship, bump the version and push a `v*` tag; GitHub Actions builds the Windows installer and macOS DMG and creates a draft Release. You can also run `Build installers` manually in Actions to download artifacts without publishing.
+
+> CI builds require `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in repository Actions secrets. Local builds require `.env.local`. Without them, the installer will report that the account service is not configured.
 
 ### Structure
 
